@@ -23,9 +23,9 @@ public class AlignEnumValuesTests
             {
                 enum EnumToAlign
                 {
-                    Value  = 0,
-                    ValueB = 1,
-                    All    = 2
+                    None  = 0,
+                    Value = 1,
+                    All   = 2
                 }
             }
             """;
@@ -41,9 +41,9 @@ public class AlignEnumValuesTests
             {
                 enum EnumToAlign
                 {
-                    {|#0:Value = 0|},
-                    {|#1:ValueB = 1|},
-                    {|#2:All = 2|}
+                    None {|#0:= 0|},
+                    Value {|#1:= 1|},
+                    All {|#2:= 2|}
                 }
             }
             """;
@@ -53,9 +53,9 @@ public class AlignEnumValuesTests
             {
                 enum EnumToAlign
                 {
-                    Value  = 0,
-                    ValueB = 1,
-                    All    = 2
+                    None  = 0,
+                    Value = 1,
+                    All   = 2
                 }
             }
             """;

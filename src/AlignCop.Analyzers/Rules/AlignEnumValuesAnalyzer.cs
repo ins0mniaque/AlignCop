@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -41,8 +43,7 @@ public class AlignEnumValuesAnalyzer : DiagnosticAnalyzer
         if (enumDeclaration.Members.Count < 2)
             return;
 
-        var previousMember   = (EnumMemberDeclarationSyntax?) null;
-        var previousLineSpan = default (FileLinePositionSpan);
+        var previousLineSpan = default(FileLinePositionSpan);
         var blockIndex       = -1;
 
         for (var index = 0; index < enumDeclaration.Members.Count; index++)
@@ -63,7 +64,6 @@ public class AlignEnumValuesAnalyzer : DiagnosticAnalyzer
             else if (blockIndex < 0)
                 blockIndex = index;
 
-            previousMember   = currentMember;
             previousLineSpan = currentLineSpan;
         }
 
@@ -75,31 +75,33 @@ public class AlignEnumValuesAnalyzer : DiagnosticAnalyzer
     {
         var aligned = true;
 
-        if (enumDeclaration.Members[startIndex].EqualsValue is not { } firstEqual)
-            throw new ArgumentException("Enum member has no EqualsValue", nameof(startIndex));
-
-        var firstEqualColumn = firstEqual.EqualsToken.GetLineSpan().StartLinePosition.Character;
-
-        for (var index = startIndex + 1; index < endIndex; index++)
+        var equalColumns   = new int[endIndex - startIndex];
+        var maxEqualColumn = -1;
+        
+        for (var index = startIndex; index < endIndex; index++)
         {
             if (enumDeclaration.Members[index].EqualsValue is not { } equal)
-                throw new ArgumentException("Enum member has no EqualsValue", nameof(endIndex));
-
-            var equalColumn = equal.EqualsToken.GetLineSpan().StartLinePosition.Character;
-            if (equalColumn != firstEqualColumn)
             {
-                aligned = false;
-                break;
+                equalColumns[index] = -1;
+                continue;
             }
+
+            var equalColumn = equalColumns[index] = equal.EqualsToken.GetLineSpan().StartLinePosition.Character;
+            if (maxEqualColumn > 0 && equalColumn != maxEqualColumn)
+                aligned = false;
+
+            if (equalColumn > maxEqualColumn)
+                maxEqualColumn = equalColumn;
         }
 
         if (aligned)
             return;
 
-        var additionalLocations = new Location[endIndex - startIndex - 1];
-        for (var index = startIndex + 1; index < endIndex; index++)
-            additionalLocations[index - (startIndex + 1)] = enumDeclaration.Members[index].GetLocation();
+        var locations = new List<Location>(endIndex - startIndex);
+        for (var index = startIndex; index < endIndex; index++)
+            if (equalColumns[index] >= 0)
+                locations.Add(enumDeclaration.Members[index].EqualsValue.GetLocation());
 
-        context.ReportDiagnostic(Diagnostic.Create(Rule, enumDeclaration.Members[startIndex].GetLocation(), additionalLocations, enumDeclaration.Identifier.Text));
+        context.ReportDiagnostic(Diagnostic.Create(Rule, locations[0], locations.Skip(1), enumDeclaration.Identifier.Text));
     }
 }

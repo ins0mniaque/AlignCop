@@ -25,13 +25,17 @@ public class AlignEnumValuesFixer : CodeFixProvider
 
     public sealed override async Task RegisterCodeFixesAsync(CodeFixContext context)
     {
-        var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
+        var root       = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
+        var diagnostic = context.Diagnostics.First();
 
-        var diagnostic     = context.Diagnostics.First();
-        var diagnosticSpan = diagnostic.Location.SourceSpan;
+        var firstSpan = diagnostic.Location.SourceSpan;
+        var lastSpan  = diagnostic.AdditionalLocations.LastOrDefault()?.SourceSpan ?? firstSpan;
 
-        var firstEnumMember = root.FindToken(diagnosticSpan.Start).Parent as EnumMemberDeclarationSyntax;
-        var lastEnumMember  = root.FindToken(diagnosticSpan.End).Parent as EnumMemberDeclarationSyntax;
+        var firstEnumMember = root.FindToken(firstSpan.Start).Parent.Parent as EnumMemberDeclarationSyntax;
+        var lastEnumMember  = root.FindToken(lastSpan.Start).Parent.Parent as EnumMemberDeclarationSyntax;
+
+        if (firstEnumMember is null || lastEnumMember is null)
+            return;
 
         context.RegisterCodeFix(
             CodeAction.Create(
@@ -59,7 +63,7 @@ public class AlignEnumValuesFixer : CodeFixProvider
 
             if (member == lastEnumMember)
             {
-                endIndex = index;
+                endIndex = index + 1;
                 break;
             }
         }
