@@ -117,16 +117,13 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="AnalyzerDescription" xml:space="preserve">
-    <value>Type names should be all uppercase.</value>
-    <comment>An optional longer localizable description of the diagnostic.</comment>
+  <data name="AlignEnumValuesDescription" xml:space="preserve">
+    <value>Enum values should be aligned.</value>
   </data>
-  <data name="AnalyzerMessageFormat" xml:space="preserve">
-    <value>Type name '{0}' contains lowercase letters</value>
-    <comment>The format-able message the diagnostic displays.</comment>
+  <data name="AlignEnumValuesMessageFormat" xml:space="preserve">
+    <value>Enum '{0}' contains unaligned values</value>
   </data>
-  <data name="AnalyzerTitle" xml:space="preserve">
-    <value>Type name contains lowercase letters</value>
-    <comment>The title of the diagnostic.</comment>
+  <data name="AlignEnumValuesTitle" xml:space="preserve">
+    <value>Enum contains unaligned values</value>
   </data>
 </root>

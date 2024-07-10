@@ -9,7 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AlignCop.Analyzers.CodeFixe
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AlignCop.Analyzers.Package", "src\AlignCop.Analyzers.Package\AlignCop.Analyzers.Package.csproj", "{0A9CFE2E-5816-4AA5-8413-7602FB0245B8}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AlignCop.Analyzers.Test", "tests\AlignCop.Analyzers.Test\AlignCop.Analyzers.Test.csproj", "{E8A4846E-C850-421B-9290-AEC34A6191C2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AlignCop.Analyzers.Test", "tests\AlignCop.Analyzers.Tests\AlignCop.Analyzers.Tests.csproj", "{E8A4846E-C850-421B-9290-AEC34A6191C2}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AlignCop.Analyzers.Vsix", "src\AlignCop.Analyzers.Vsix\AlignCop.Analyzers.Vsix.csproj", "{1422B57B-A4E5-42B4-8FA4-B7C48D3D8DE3}"
 EndProject

@@ -8,7 +8,7 @@ using Microsoft.CodeAnalysis.Testing;
 using Microsoft.CodeAnalysis.Testing.Verifiers;
 using Microsoft.CodeAnalysis.VisualBasic.Testing;
 
-namespace AlignCop.Analyzers.Test
+namespace AlignCop.Analyzers.Tests
 {
     public static partial class VisualBasicCodeFixVerifier<TAnalyzer, TCodeFix>
         where TAnalyzer : DiagnosticAnalyzer, new()

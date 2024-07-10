@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
     <IsPackable>false</IsPackable>
     <RootNamespace>AlignCop.Analyzers</RootNamespace>
   </PropertyGroup>
@@ -12,6 +13,11 @@
 
   <ItemGroup>
     <ProjectReference Include="..\AlignCop.Analyzers\AlignCop.Analyzers.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)\..\AlignCop.Analyzers\RuleIdentifiers.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)\..\AlignCop.Analyzers\Internal\LocationExtensions.cs" LinkBase="Internal" />
   </ItemGroup>
 
   <ItemGroup>

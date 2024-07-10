@@ -8,7 +8,7 @@ using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Testing;
 using Microsoft.CodeAnalysis.Testing.Verifiers;
 
-namespace AlignCop.Analyzers.Test
+namespace AlignCop.Analyzers.Tests
 {
     public static partial class CSharpCodeFixVerifier<TAnalyzer, TCodeFix>
         where TAnalyzer : DiagnosticAnalyzer, new()

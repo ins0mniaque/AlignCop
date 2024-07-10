@@ -4,7 +4,7 @@ using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
-namespace AlignCop.Analyzers.Test
+namespace AlignCop.Analyzers.Tests
 {
     internal static class CSharpVerifierHelper
     {
