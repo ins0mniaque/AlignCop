@@ -12,7 +12,7 @@ public class AlignEnumValuesTests
     [TestMethod]
     public async Task NoEnum()
     {
-        await VerifyCS.VerifyAnalyzerAsync(string.Empty);
+        await VerifyCS.VerifyAnalyzerAsync(string.Empty).ConfigureAwait(false);
     }
 
     [TestMethod]
@@ -25,7 +25,7 @@ public class AlignEnumValuesTests
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(source);
+        await VerifyCS.VerifyAnalyzerAsync(source).ConfigureAwait(false);
     }
 
     [TestMethod]
@@ -43,7 +43,7 @@ public class AlignEnumValuesTests
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(source);
+        await VerifyCS.VerifyAnalyzerAsync(source).ConfigureAwait(false);
     }
 
     [TestMethod]
@@ -79,7 +79,7 @@ public class AlignEnumValuesTests
                                .WithLocation(2)
                                .WithArguments("EnumToAlign");
 
-        await VerifyCS.VerifyCodeFixAsync(source, expected, fixedSource);
+        await VerifyCS.VerifyCodeFixAsync(source, expected, fixedSource).ConfigureAwait(false);
     }
 
     [TestMethod]
@@ -105,7 +105,7 @@ public class AlignEnumValuesTests
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(source);
+        await VerifyCS.VerifyAnalyzerAsync(source).ConfigureAwait(false);
     }
 
     [TestMethod]
@@ -163,7 +163,7 @@ public class AlignEnumValuesTests
                                 .WithLocation(5)
                                 .WithArguments("EnumToAlign");
 
-        await VerifyCS.VerifyCodeFixAsync(source, [expectedA, expectedB], fixedSource);
+        await VerifyCS.VerifyCodeFixAsync(source, [expectedA, expectedB], fixedSource).ConfigureAwait(false);
     }
 
     [TestMethod]
@@ -214,7 +214,7 @@ public class AlignEnumValuesTests
                                 .WithLocation(4)
                                 .WithArguments("EnumToAlign");
 
-        await VerifyCS.VerifyCodeFixAsync(source, [expectedA, expectedB], fixedSource);
+        await VerifyCS.VerifyCodeFixAsync(source, [expectedA, expectedB], fixedSource).ConfigureAwait(false);
     }
 
     [TestMethod]
@@ -270,6 +270,6 @@ public class AlignEnumValuesTests
                                 .WithLocation(7)
                                 .WithArguments("EnumToAlign");
 
-        await VerifyCS.VerifyCodeFixAsync(source, [expectedA, expectedB], fixedSource);
+        await VerifyCS.VerifyCodeFixAsync(source, [expectedA, expectedB], fixedSource).ConfigureAwait(false);
     }
 }

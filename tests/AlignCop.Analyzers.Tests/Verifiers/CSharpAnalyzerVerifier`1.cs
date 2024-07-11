@@ -1,7 +1,4 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
-
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Testing;
@@ -33,7 +30,8 @@ namespace AlignCop.Analyzers.Tests
             };
 
             test.ExpectedDiagnostics.AddRange(expected);
-            await test.RunAsync(CancellationToken.None);
+
+            await test.RunAsync(CancellationToken.None).ConfigureAwait(false);
         }
     }
 }

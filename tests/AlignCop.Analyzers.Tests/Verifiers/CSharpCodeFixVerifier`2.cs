@@ -1,7 +1,4 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
-
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Diagnostics;
@@ -35,16 +32,17 @@ namespace AlignCop.Analyzers.Tests
             };
 
             test.ExpectedDiagnostics.AddRange(expected);
-            await test.RunAsync(CancellationToken.None);
+
+            await test.RunAsync(CancellationToken.None).ConfigureAwait(false);
         }
 
         /// <inheritdoc cref="CodeFixVerifier{TAnalyzer, TCodeFix, TTest, TVerifier}.VerifyCodeFixAsync(string, string)"/>
         public static async Task VerifyCodeFixAsync(string source, string fixedSource)
-            => await VerifyCodeFixAsync(source, DiagnosticResult.EmptyDiagnosticResults, fixedSource);
+            => await VerifyCodeFixAsync(source, DiagnosticResult.EmptyDiagnosticResults, fixedSource).ConfigureAwait(false);
 
         /// <inheritdoc cref="CodeFixVerifier{TAnalyzer, TCodeFix, TTest, TVerifier}.VerifyCodeFixAsync(string, DiagnosticResult, string)"/>
         public static async Task VerifyCodeFixAsync(string source, DiagnosticResult expected, string fixedSource)
-            => await VerifyCodeFixAsync(source, new[] { expected }, fixedSource);
+            => await VerifyCodeFixAsync(source, [expected], fixedSource).ConfigureAwait(false);
 
         /// <inheritdoc cref="CodeFixVerifier{TAnalyzer, TCodeFix, TTest, TVerifier}.VerifyCodeFixAsync(string, DiagnosticResult[], string)"/>
         public static async Task VerifyCodeFixAsync(string source, DiagnosticResult[] expected, string fixedSource)
@@ -56,7 +54,8 @@ namespace AlignCop.Analyzers.Tests
             };
 
             test.ExpectedDiagnostics.AddRange(expected);
-            await test.RunAsync(CancellationToken.None);
+
+            await test.RunAsync(CancellationToken.None).ConfigureAwait(false);
         }
     }
 }

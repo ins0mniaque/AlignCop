@@ -12,7 +12,7 @@ public class AlignVariableAssignmentsTests
     [TestMethod]
     public async Task NoAssignments()
     {
-        await VerifyCS.VerifyAnalyzerAsync(string.Empty);
+        await VerifyCS.VerifyAnalyzerAsync(string.Empty).ConfigureAwait(false);
     }
 
     [TestMethod]
@@ -31,7 +31,7 @@ public class AlignVariableAssignmentsTests
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(source);
+        await VerifyCS.VerifyAnalyzerAsync(source).ConfigureAwait(false);
     }
 
     [TestMethod]
@@ -52,7 +52,7 @@ public class AlignVariableAssignmentsTests
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(source);
+        await VerifyCS.VerifyAnalyzerAsync(source).ConfigureAwait(false);
     }
 
     [TestMethod]
@@ -93,6 +93,6 @@ public class AlignVariableAssignmentsTests
                                .WithLocation(1)
                                .WithLocation(2);
 
-        await VerifyCS.VerifyCodeFixAsync(source, expected, fixedSource);
+        await VerifyCS.VerifyCodeFixAsync(source, expected, fixedSource).ConfigureAwait(false);
     }
 }

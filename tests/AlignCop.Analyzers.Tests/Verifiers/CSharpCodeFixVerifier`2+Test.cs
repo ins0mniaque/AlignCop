@@ -15,7 +15,12 @@ namespace AlignCop.Analyzers.Tests
             {
                 SolutionTransforms.Add((solution, projectId) =>
                 {
-                    var compilationOptions = solution.GetProject(projectId).CompilationOptions;
+                    if(solution.GetProject(projectId) is not { } project)
+                        throw new ArgumentException($"Project {projectId} not found", nameof(projectId));
+
+                    if(project.CompilationOptions is not { } compilationOptions)
+                        throw new ArgumentException($"Project {projectId} compilation options are missing", nameof(projectId));
+
                     compilationOptions = compilationOptions.WithSpecificDiagnosticOptions(
                         compilationOptions.SpecificDiagnosticOptions.SetItems(CSharpVerifierHelper.NullableWarnings));
                     solution = solution.WithProjectCompilationOptions(projectId, compilationOptions);
