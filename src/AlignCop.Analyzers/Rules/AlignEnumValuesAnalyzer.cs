@@ -59,7 +59,7 @@ public class AlignEnumValuesAnalyzer : DiagnosticAnalyzer
                 if (blockIndex >= 0)
                     AnalyzeEnumDeclarationBlock(context, enumDeclaration, blockIndex, index);
 
-                blockIndex = -1;
+                blockIndex = currentMember.EqualsValue is null ? -1 : index;
             }
             else if (blockIndex < 0)
                 blockIndex = index;
@@ -86,7 +86,7 @@ public class AlignEnumValuesAnalyzer : DiagnosticAnalyzer
                 continue;
             }
 
-            var equalColumn = equalColumns[index] = equal.EqualsToken.GetLineSpan().StartLinePosition.Character;
+            var equalColumn = equalColumns[index - startIndex] = equal.EqualsToken.GetLineSpan().StartLinePosition.Character;
             if (maxEqualColumn > 0 && equalColumn != maxEqualColumn)
                 aligned = false;
 
@@ -99,7 +99,7 @@ public class AlignEnumValuesAnalyzer : DiagnosticAnalyzer
 
         var locations = new List<Location>(endIndex - startIndex);
         for (var index = startIndex; index < endIndex; index++)
-            if (equalColumns[index] >= 0)
+            if (equalColumns[index - startIndex] >= 0)
                 locations.Add(enumDeclaration.Members[index].EqualsValue.GetLocation());
 
         context.ReportDiagnostic(Diagnostic.Create(Rule, locations[0], locations.Skip(1), enumDeclaration.Identifier.Text));
