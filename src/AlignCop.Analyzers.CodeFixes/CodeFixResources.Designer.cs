@@ -68,5 +68,14 @@ namespace AlignCop.Analyzers {
                 return ResourceManager.GetString("AlignEnumValuesCodeFixTitle", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Align assignments.
+        /// </summary>
+        internal static string AlignVariableAssignmentsCodeFixTitle {
+            get {
+                return ResourceManager.GetString("AlignVariableAssignmentsCodeFixTitle", resourceCulture);
+            }
+        }
     }
 }

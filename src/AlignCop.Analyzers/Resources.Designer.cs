@@ -86,5 +86,32 @@ namespace AlignCop.Analyzers {
                 return ResourceManager.GetString("AlignEnumValuesTitle", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Assignments should be aligned..
+        /// </summary>
+        internal static string AlignVariableAssignmentsDescription {
+            get {
+                return ResourceManager.GetString("AlignVariableAssignmentsDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Assignments should be aligned.
+        /// </summary>
+        internal static string AlignVariableAssignmentsMessageFormat {
+            get {
+                return ResourceManager.GetString("AlignVariableAssignmentsMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unaligned assignments.
+        /// </summary>
+        internal static string AlignVariableAssignmentsTitle {
+            get {
+                return ResourceManager.GetString("AlignVariableAssignmentsTitle", resourceCulture);
+            }
+        }
     }
 }

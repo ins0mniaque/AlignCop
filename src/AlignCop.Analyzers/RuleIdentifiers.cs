@@ -4,7 +4,8 @@ namespace AlignCop.Analyzers;
 
 internal static class RuleIdentifiers
 {
-    public const string AlignEnumValues = "AA1002";
+    public const string AlignVariableAssignments = "AA1000";
+    public const string AlignEnumValues          = "AA1002";
 
     public static string GetHelpUri(string identifier)
     {
