@@ -49,7 +49,7 @@ public static class AlignmentAnalyzer
 
         var equalColumns   = new int[endIndex - startIndex];
         var maxEqualColumn = -1;
-        
+
         for (var index = startIndex; index < endIndex; index++)
         {
             if (getEqualsValueClause(elements[index]) is not { } equal)

@@ -1,16 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Composition;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
 
 using AlignCop.Analyzers.Internal;
 
@@ -37,57 +34,22 @@ public class AlignEnumValuesFixer : CodeFixProvider
         if (firstEnumMember is null || lastEnumMember is null)
             return;
 
+        var enumDeclaration = firstEnumMember.Parent as EnumDeclarationSyntax;
+        if (enumDeclaration is null)
+            return;
+
         context.RegisterCodeFix(
             CodeAction.Create(
                 title: CodeFixResources.AlignEnumValuesCodeFixTitle,
-                createChangedDocument: cancellationToken => AlignEnumValues(context.Document, firstEnumMember, lastEnumMember, cancellationToken),
+                createChangedDocument: cancellationToken => AlignmentFixer.FixUnalignment(context.Document, enumDeclaration.Members, firstEnumMember, lastEnumMember, GetEqualsValueClauseFunc, cancellationToken),
                 equivalenceKey: nameof(CodeFixResources.AlignEnumValuesCodeFixTitle)),
             diagnostic);
     }
 
-    private async Task<Document> AlignEnumValues(Document document, EnumMemberDeclarationSyntax firstEnumMember, EnumMemberDeclarationSyntax lastEnumMember, CancellationToken cancellationToken)
+    private static readonly Func<EnumMemberDeclarationSyntax, EqualsValueClauseSyntax?> GetEqualsValueClauseFunc = GetEqualsValueClause;
+
+    private static EqualsValueClauseSyntax? GetEqualsValueClause(EnumMemberDeclarationSyntax enumDeclaration)
     {
-        var enumDeclaration = firstEnumMember.Parent as EnumDeclarationSyntax;
-
-        var startIndex = enumDeclaration.Members.IndexOf(firstEnumMember);
-        var endIndex   = enumDeclaration.Members.Count;
-
-        var maxEqualColumn = -1;
-
-        for (var index = startIndex; index < endIndex; index++)
-        {
-            var member = enumDeclaration.Members[index];
-
-            if (member.EqualsValue is { } equal)
-                maxEqualColumn = Math.Max(equal.EqualsToken.GetLineSpan().StartLinePosition.Character, maxEqualColumn);
-
-            if (member == lastEnumMember)
-            {
-                endIndex = index + 1;
-                break;
-            }
-        }
-
-        if (maxEqualColumn < 0)
-            return document;
-
-        var text    = await document.GetTextAsync(cancellationToken).ConfigureAwait(false);
-        var changes = new List<TextChange>(endIndex - startIndex);
-
-        for (var index = startIndex; index < endIndex; index++)
-        {
-            var member = enumDeclaration.Members[index];
-            if (member.EqualsValue is not { } equal)
-                continue;
-
-            var equalColumn = equal.EqualsToken.GetLineSpan().StartLinePosition.Character;
-            if (equalColumn < maxEqualColumn)
-                changes.Add(new TextChange(member.EqualsValue.EqualsToken.Span, new string(' ', maxEqualColumn - equalColumn) + member.EqualsValue.EqualsToken.Text));
-        }
-
-        if (changes.Count is 0)
-            return document;
-
-        return document.WithText(text.WithChanges(changes));
+        return enumDeclaration.EqualsValue;
     }
 }

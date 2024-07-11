@@ -1,16 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Composition;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
 
 using AlignCop.Analyzers.Internal;
 
@@ -31,63 +28,31 @@ public class AlignVariableAssignmentsFixer : CodeFixProvider
         var firstSpan = diagnostic.Location.SourceSpan;
         var lastSpan  = diagnostic.AdditionalLocations.LastOrDefault()?.SourceSpan ?? firstSpan;
 
-        var firstEnumMember = root.FindToken(firstSpan.Start).Parent.Parent.Parent.Parent as LocalDeclarationStatementSyntax;
-        var lastEnumMember  = root.FindToken(lastSpan.Start).Parent.Parent.Parent.Parent as LocalDeclarationStatementSyntax;
+        var firstVariableAssignment = root.FindToken(firstSpan.Start).Parent.Parent.Parent.Parent as LocalDeclarationStatementSyntax;
+        var lastVariableAssignment  = root.FindToken(lastSpan.Start).Parent.Parent.Parent.Parent as LocalDeclarationStatementSyntax;
 
-        if (firstEnumMember is null || lastEnumMember is null)
+        if (firstVariableAssignment is null || lastVariableAssignment is null)
+            return;
+
+        var block = firstVariableAssignment.Parent as BlockSyntax;
+        if (block is null)
             return;
 
         context.RegisterCodeFix(
             CodeAction.Create(
-                title: CodeFixResources.AlignEnumValuesCodeFixTitle,
-                createChangedDocument: cancellationToken => AlignEnumValues(context.Document, firstEnumMember, lastEnumMember, cancellationToken),
-                equivalenceKey: nameof(CodeFixResources.AlignEnumValuesCodeFixTitle)),
+                title: CodeFixResources.AlignVariableAssignmentsCodeFixTitle,
+                createChangedDocument: cancellationToken => AlignmentFixer.FixUnalignment(context.Document, block.Statements, firstVariableAssignment, lastVariableAssignment, GetEqualsValueClauseFunc, cancellationToken),
+                equivalenceKey: nameof(CodeFixResources.AlignVariableAssignmentsCodeFixTitle)),
             diagnostic);
     }
 
-    private async Task<Document> AlignEnumValues(Document document, LocalDeclarationStatementSyntax firstEnumMember, LocalDeclarationStatementSyntax lastEnumMember, CancellationToken cancellationToken)
+    private static readonly Func<StatementSyntax, EqualsValueClauseSyntax?> GetEqualsValueClauseFunc = GetEqualsValueClause;
+
+    private static EqualsValueClauseSyntax? GetEqualsValueClause(StatementSyntax statementSyntax)
     {
-        var block = firstEnumMember.Parent as BlockSyntax;
+        if (statementSyntax is LocalDeclarationStatementSyntax localDeclarationStatement && localDeclarationStatement.Declaration.Variables.Count is 1)
+            return localDeclarationStatement.Declaration.Variables[0].Initializer;
 
-        var startIndex = block.Statements.IndexOf(firstEnumMember);
-        var endIndex   = block.Statements.Count;
-
-        var maxEqualColumn = -1;
-
-        for (var index = startIndex; index < endIndex; index++)
-        {
-            var member = block.Statements[index] as LocalDeclarationStatementSyntax;
-
-            if (member?.Declaration.Variables[ 0 ].Initializer is { } equal)
-                maxEqualColumn = Math.Max(equal.EqualsToken.GetLineSpan().StartLinePosition.Character, maxEqualColumn);
-
-            if (member == lastEnumMember)
-            {
-                endIndex = index + 1;
-                break;
-            }
-        }
-
-        if (maxEqualColumn < 0)
-            return document;
-
-        var text    = await document.GetTextAsync(cancellationToken).ConfigureAwait(false);
-        var changes = new List<TextChange>(endIndex - startIndex);
-
-        for (var index = startIndex; index < endIndex; index++)
-        {
-            var member = block.Statements[index] as LocalDeclarationStatementSyntax;
-            if (member?.Declaration.Variables[ 0 ].Initializer is not { } equal)
-                continue;
-
-            var equalColumn = equal.EqualsToken.GetLineSpan().StartLinePosition.Character;
-            if (equalColumn < maxEqualColumn)
-                changes.Add(new TextChange(member.Declaration.Variables[ 0 ].Initializer.EqualsToken.Span, new string(' ', maxEqualColumn - equalColumn) + member.Declaration.Variables[ 0 ].Initializer.EqualsToken.Text));
-        }
-
-        if (changes.Count is 0)
-            return document;
-
-        return document.WithText(text.WithChanges(changes));
+        return null;
     }
 }
