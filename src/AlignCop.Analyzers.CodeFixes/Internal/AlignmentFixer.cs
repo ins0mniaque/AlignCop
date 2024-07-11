@@ -68,7 +68,7 @@ public static class AlignmentFixer
 
             var equalColumn = equalColumns[index - startIndex];
             if (equalColumn < maxEqualColumn)
-                changes.Add(new TextChange(equal.EqualsToken.Span, new string(' ', maxEqualColumn - equalColumn) + equal.EqualsToken.Text));
+                changes.Add(new TextChange(new TextSpan(equal.EqualsToken.Span.Start, 0), new string(' ', maxEqualColumn - equalColumn)));
         }
 
         if (changes.Count is 0)
