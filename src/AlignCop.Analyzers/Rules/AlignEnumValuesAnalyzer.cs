@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 
@@ -35,73 +34,19 @@ public class AlignEnumValuesAnalyzer : DiagnosticAnalyzer
         context.RegisterSyntaxNodeAction(AnalyzeEnumDeclarationAction, SyntaxKind.EnumDeclaration);
     }
 
-    private static readonly Action<SyntaxNodeAnalysisContext> AnalyzeEnumDeclarationAction = AnalyzeEnumDeclaration;
+    private static readonly Action<SyntaxNodeAnalysisContext>                           AnalyzeEnumDeclarationAction = AnalyzeEnumDeclaration;
+    private static readonly Func<EnumMemberDeclarationSyntax, EqualsValueClauseSyntax?> GetEqualsValueClauseFunc     = GetEqualsValueClause;
 
     private static void AnalyzeEnumDeclaration(SyntaxNodeAnalysisContext context)
     {
         var enumDeclaration = (EnumDeclarationSyntax)context.Node;
-        if (enumDeclaration.Members.Count < 2)
-            return;
 
-        var previousLineSpan = default(FileLinePositionSpan);
-        var blockIndex       = -1;
-
-        for (var index = 0; index < enumDeclaration.Members.Count; index++)
-        {
-            var currentMember   = enumDeclaration.Members[index];
-            var currentLineSpan = currentMember.GetLineSpan();
-
-            var isNotOnNextLine = index > 0 && (previousLineSpan.StartLinePosition.Character != currentLineSpan.StartLinePosition.Character ||
-                                                previousLineSpan.StartLinePosition.Line + 1  != currentLineSpan.StartLinePosition.Line);
-
-            if (isNotOnNextLine || currentMember.EqualsValue is null)
-            {
-                if (blockIndex >= 0)
-                    AnalyzeEnumDeclarationBlock(context, enumDeclaration, blockIndex, index);
-
-                blockIndex = currentMember.EqualsValue is null ? -1 : index;
-            }
-            else if (blockIndex < 0)
-                blockIndex = index;
-
-            previousLineSpan = currentLineSpan;
-        }
-
-        if (blockIndex >= 0)
-            AnalyzeEnumDeclarationBlock(context, enumDeclaration, blockIndex, enumDeclaration.Members.Count);
+        foreach (var unalignment in AlignmentAnalyzer.FindUnalignments(context, enumDeclaration.Members, GetEqualsValueClauseFunc))
+            context.ReportDiagnostic(Diagnostic.Create(Rule, unalignment[0], unalignment.Skip(1), enumDeclaration.Identifier.Text));
     }
 
-    private static void AnalyzeEnumDeclarationBlock(SyntaxNodeAnalysisContext context, EnumDeclarationSyntax enumDeclaration, int startIndex, int endIndex)
+    private static EqualsValueClauseSyntax? GetEqualsValueClause(EnumMemberDeclarationSyntax enumDeclaration)
     {
-        var aligned = true;
-
-        var equalColumns   = new int[endIndex - startIndex];
-        var maxEqualColumn = -1;
-        
-        for (var index = startIndex; index < endIndex; index++)
-        {
-            if (enumDeclaration.Members[index].EqualsValue is not { } equal)
-            {
-                equalColumns[index] = -1;
-                continue;
-            }
-
-            var equalColumn = equalColumns[index - startIndex] = equal.EqualsToken.GetLineSpan().StartLinePosition.Character;
-            if (maxEqualColumn > 0 && equalColumn != maxEqualColumn)
-                aligned = false;
-
-            if (equalColumn > maxEqualColumn)
-                maxEqualColumn = equalColumn;
-        }
-
-        if (aligned)
-            return;
-
-        var locations = new List<Location>(endIndex - startIndex);
-        for (var index = startIndex; index < endIndex; index++)
-            if (equalColumns[index - startIndex] >= 0)
-                locations.Add(enumDeclaration.Members[index].EqualsValue.GetLocation());
-
-        context.ReportDiagnostic(Diagnostic.Create(Rule, locations[0], locations.Skip(1), enumDeclaration.Identifier.Text));
+        return enumDeclaration.EqualsValue;
     }
 }
