@@ -7,7 +7,9 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 
-namespace AlignCop.Analyzers.Internal;
+using AlignCop.Analyzers.Internal;
+
+namespace AlignCop.Analyzers;
 
 public static class AlignmentFixer
 {

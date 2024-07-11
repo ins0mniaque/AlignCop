@@ -9,9 +9,7 @@ using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-using AlignCop.Analyzers.Internal;
-
-namespace AlignCop.Analyzers;
+namespace AlignCop.Analyzers.Rules;
 
 [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(AlignEnumValuesFixer)), Shared]
 public class AlignEnumValuesFixer : CodeFixProvider

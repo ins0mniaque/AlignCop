@@ -7,9 +7,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-using AlignCop.Analyzers.Internal;
-
-namespace AlignCop.Analyzers;
+namespace AlignCop.Analyzers.Rules;
 
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public class AlignVariableAssignmentsAnalyzer : DiagnosticAnalyzer

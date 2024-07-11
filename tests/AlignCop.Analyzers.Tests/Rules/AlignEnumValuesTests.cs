@@ -2,7 +2,9 @@
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace AlignCop.Analyzers.Tests;
+using AlignCop.Analyzers.Rules;
+
+namespace AlignCop.Analyzers.Tests.Rules;
 
 using VerifyCS = CSharpCodeFixVerifier<AlignEnumValuesAnalyzer, AlignEnumValuesFixer>;
 
