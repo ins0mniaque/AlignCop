@@ -27,6 +27,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Rules", "Rules", "{467D0F3F
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "⧸", "⧸", "{98694998-0DB7-43C8-8FD6-EAC4E12B4E63}"
 	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
 		.gitignore = .gitignore
 		Directory.Build.props = Directory.Build.props
 		Directory.Build.targets = Directory.Build.targets
