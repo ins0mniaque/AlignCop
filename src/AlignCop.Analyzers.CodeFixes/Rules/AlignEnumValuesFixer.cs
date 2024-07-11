@@ -17,14 +17,15 @@ public sealed class AlignEnumValuesFixer : CodeFixProvider
 
     public sealed override async Task RegisterCodeFixesAsync(CodeFixContext context)
     {
-        var root       = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
+        var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false) ??
+                   throw new InvalidOperationException("Could not get document syntax root");
+
         var diagnostic = context.Diagnostics[0];
+        var firstSpan  = diagnostic.Location.SourceSpan;
+        var lastSpan   = diagnostic.AdditionalLocations.Count > 0 ? diagnostic.AdditionalLocations[diagnostic.AdditionalLocations.Count - 1].SourceSpan : firstSpan;
 
-        var firstSpan = diagnostic.Location.SourceSpan;
-        var lastSpan  = diagnostic.AdditionalLocations.Count > 0 ? diagnostic.AdditionalLocations[diagnostic.AdditionalLocations.Count - 1].SourceSpan : firstSpan;
-
-        if (root.FindToken(firstSpan.Start).Parent.Parent is not EnumMemberDeclarationSyntax firstEnumMember ||
-            root.FindToken(lastSpan.Start).Parent.Parent is not EnumMemberDeclarationSyntax lastEnumMember)
+        if (root.FindToken(firstSpan.Start).Parent?.Parent is not EnumMemberDeclarationSyntax firstEnumMember ||
+            root.FindToken(lastSpan.Start).Parent?.Parent is not EnumMemberDeclarationSyntax lastEnumMember)
             return;
 
         if (firstEnumMember.Parent is not EnumDeclarationSyntax enumDeclaration)

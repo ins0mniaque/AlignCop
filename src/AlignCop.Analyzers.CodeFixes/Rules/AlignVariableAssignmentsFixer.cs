@@ -17,14 +17,15 @@ public sealed class AlignVariableAssignmentsFixer : CodeFixProvider
 
     public sealed override async Task RegisterCodeFixesAsync(CodeFixContext context)
     {
-        var root       = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
-        var diagnostic = context.Diagnostics.First();
+        var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false) ??
+                   throw new InvalidOperationException("Could not get document syntax root");
 
-        var firstSpan = diagnostic.Location.SourceSpan;
-        var lastSpan  = diagnostic.AdditionalLocations.Count > 0 ? diagnostic.AdditionalLocations[diagnostic.AdditionalLocations.Count - 1].SourceSpan : firstSpan;
+        var diagnostic = context.Diagnostics[0];
+        var firstSpan  = diagnostic.Location.SourceSpan;
+        var lastSpan   = diagnostic.AdditionalLocations.Count > 0 ? diagnostic.AdditionalLocations[diagnostic.AdditionalLocations.Count - 1].SourceSpan : firstSpan;
 
-        if (root.FindToken(firstSpan.Start).Parent.Parent.Parent.Parent is not LocalDeclarationStatementSyntax firstVariableAssignment ||
-            root.FindToken(lastSpan.Start).Parent.Parent.Parent.Parent is not LocalDeclarationStatementSyntax lastVariableAssignment)
+        if (root.FindToken(firstSpan.Start).Parent?.Parent?.Parent?.Parent is not LocalDeclarationStatementSyntax firstVariableAssignment ||
+            root.FindToken(lastSpan.Start).Parent?.Parent?.Parent?.Parent is not LocalDeclarationStatementSyntax lastVariableAssignment)
             return;
 
         if (firstVariableAssignment.Parent is not BlockSyntax block)
