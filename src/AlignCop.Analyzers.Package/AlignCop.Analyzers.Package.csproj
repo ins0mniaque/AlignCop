@@ -9,16 +9,10 @@
 
   <PropertyGroup>
     <PackageId>AlignCop.Analyzers</PackageId>
-    <PackageVersion>0.1.0.0</PackageVersion>
-    <Authors>ins0mniaque</Authors>
-    <PackageLicenseUrl>https://github.com/ins0mniaque/AlignCop/LICENSE</PackageLicenseUrl>
-    <PackageProjectUrl>https://github.com/ins0mniaque/AlignCop</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/ins0mniaque/AlignCop</RepositoryUrl>
+    <Version>0.1.0</Version>
+    <Description>Analyzes C# source code to enforce a set of code alignment rules</Description>
+    <PackageTags>AlignCop, AlignCop.Analyzers, code alignment, align, formatting</PackageTags>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-    <Description>AlignCop.Analyzers</Description>
-    <PackageReleaseNotes>Summary of changes made in this release of the package.</PackageReleaseNotes>
-    <Copyright>Copyright</Copyright>
-    <PackageTags>AlignCop.Analyzers, code alignment, align</PackageTags>
     <DevelopmentDependency>true</DevelopmentDependency>
     <NoPackageAnalysis>true</NoPackageAnalysis>
 
