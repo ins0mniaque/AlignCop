@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 using System.Composition;
-using System.Linq;
-using System.Threading.Tasks;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
@@ -12,7 +9,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 namespace AlignCop.Analyzers.Rules;
 
 [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(AlignEnumValuesFixer)), Shared]
-public class AlignEnumValuesFixer : CodeFixProvider
+public sealed class AlignEnumValuesFixer : CodeFixProvider
 {
     public sealed override ImmutableArray<string> FixableDiagnosticIds => ImmutableArray.Create(RuleIdentifiers.AlignEnumValues);
 
@@ -21,19 +18,16 @@ public class AlignEnumValuesFixer : CodeFixProvider
     public sealed override async Task RegisterCodeFixesAsync(CodeFixContext context)
     {
         var root       = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
-        var diagnostic = context.Diagnostics.First();
+        var diagnostic = context.Diagnostics[0];
 
         var firstSpan = diagnostic.Location.SourceSpan;
-        var lastSpan  = diagnostic.AdditionalLocations.LastOrDefault()?.SourceSpan ?? firstSpan;
+        var lastSpan  = diagnostic.AdditionalLocations.Count > 0 ? diagnostic.AdditionalLocations[diagnostic.AdditionalLocations.Count - 1].SourceSpan : firstSpan;
 
-        var firstEnumMember = root.FindToken(firstSpan.Start).Parent.Parent as EnumMemberDeclarationSyntax;
-        var lastEnumMember  = root.FindToken(lastSpan.Start).Parent.Parent as EnumMemberDeclarationSyntax;
-
-        if (firstEnumMember is null || lastEnumMember is null)
+        if (root.FindToken(firstSpan.Start).Parent.Parent is not EnumMemberDeclarationSyntax firstEnumMember ||
+            root.FindToken(lastSpan.Start).Parent.Parent is not EnumMemberDeclarationSyntax lastEnumMember)
             return;
 
-        var enumDeclaration = firstEnumMember.Parent as EnumDeclarationSyntax;
-        if (enumDeclaration is null)
+        if (firstEnumMember.Parent is not EnumDeclarationSyntax enumDeclaration)
             return;
 
         context.RegisterCodeFix(

@@ -1,17 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Diagnostics;
 
 using AlignCop.Analyzers.Internal;
 
 namespace AlignCop.Analyzers;
 
-public static class AlignmentAnalyzer
+internal static class AlignmentAnalyzer
 {
-    public static IEnumerable<List<Location>> FindUnalignments<T>(SyntaxNodeAnalysisContext context, IReadOnlyList<T> elements, Func<T, EqualsValueClauseSyntax?> getEqualsValueClause) where T : SyntaxNode
+    public static IEnumerable<List<Location>> FindUnalignments<T>(IReadOnlyList<T> elements, Func<T, EqualsValueClauseSyntax?> getEqualsValueClause) where T : SyntaxNode
     {
         if (elements.Count < 2)
             yield break;
@@ -30,7 +26,7 @@ public static class AlignmentAnalyzer
 
             if (isNotOnNextLine || equal is null)
             {
-                if (blockIndex >= 0 && FindUnalignment(context, elements, getEqualsValueClause, blockIndex, index) is { } unalignment)
+                if (blockIndex >= 0 && FindUnalignment(elements, getEqualsValueClause, blockIndex, index) is { } unalignment)
                     yield return unalignment;
 
                 blockIndex = equal is null ? -1 : index;
@@ -41,11 +37,11 @@ public static class AlignmentAnalyzer
             previousLineSpan = currentLineSpan;
         }
 
-        if (blockIndex >= 0 && FindUnalignment(context, elements, getEqualsValueClause, blockIndex, elements.Count) is { } lastUnalignment)
+        if (blockIndex >= 0 && FindUnalignment(elements, getEqualsValueClause, blockIndex, elements.Count) is { } lastUnalignment)
             yield return lastUnalignment;
     }
 
-    private static List<Location>? FindUnalignment<T>(SyntaxNodeAnalysisContext context, IReadOnlyList<T> elements, Func<T, EqualsValueClauseSyntax?> getEqualsValueClause, int startIndex, int endIndex) where T : SyntaxNode
+    private static List<Location>? FindUnalignment<T>(IReadOnlyList<T> elements, Func<T, EqualsValueClauseSyntax?> getEqualsValueClause, int startIndex, int endIndex) where T : SyntaxNode
     {
         var aligned = true;
 
@@ -73,8 +69,8 @@ public static class AlignmentAnalyzer
 
         var locations = new List<Location>(endIndex - startIndex);
         for (var index = startIndex; index < endIndex; index++)
-            if (equalColumns[index - startIndex] >= 0)
-                locations.Add(getEqualsValueClause(elements[index]).GetLocation());
+            if (equalColumns[index - startIndex] >= 0 && getEqualsValueClause(elements[index]) is { } equal)
+                locations.Add(equal.GetLocation());
 
         return locations;
     }

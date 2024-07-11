@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Immutable;
-using System.Linq;
+﻿using System.Collections.Immutable;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -10,7 +8,7 @@ using Microsoft.CodeAnalysis.Diagnostics;
 namespace AlignCop.Analyzers.Rules;
 
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
-public class AlignVariableAssignmentsAnalyzer : DiagnosticAnalyzer
+public sealed class AlignVariableAssignmentsAnalyzer : DiagnosticAnalyzer
 {
     private static readonly DiagnosticDescriptor Rule = new(
         id: RuleIdentifiers.AlignVariableAssignments,
@@ -26,6 +24,9 @@ public class AlignVariableAssignmentsAnalyzer : DiagnosticAnalyzer
 
     public override void Initialize(AnalysisContext context)
     {
+        if(context is null)
+            throw new ArgumentNullException(nameof(context));
+
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
         context.EnableConcurrentExecution();
 
@@ -39,7 +40,7 @@ public class AlignVariableAssignmentsAnalyzer : DiagnosticAnalyzer
     {
         var block = (BlockSyntax)context.Node;
 
-        foreach (var unalignment in AlignmentAnalyzer.FindUnalignments(context, block.Statements, GetEqualsValueClauseFunc))
+        foreach (var unalignment in AlignmentAnalyzer.FindUnalignments(block.Statements, GetEqualsValueClauseFunc))
             context.ReportDiagnostic(Diagnostic.Create(Rule, unalignment[0], unalignment.Skip(1)));
     }
 

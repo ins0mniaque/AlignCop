@@ -4,12 +4,14 @@
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <NeutralLanguage>en-US</NeutralLanguage>
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <AnalysisMode>AllEnabledByDefault</AnalysisMode>
     <AnalysisLevel>latest</AnalysisLevel>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <NoWarn>$(NoWarn);CA1510</NoWarn>
     <AccelerateBuildsInVisualStudio>true</AccelerateBuildsInVisualStudio>
     <RestoreUseStaticGraphEvaluation>true</RestoreUseStaticGraphEvaluation>
     <RestoreSources>https://api.nuget.org/v3/index.json</RestoreSources>
@@ -17,7 +19,7 @@
 
   <PropertyGroup>
     <Authors>Jean-Philippe Leconte</Authors>
-    <Copyright>Copyright © Jean-Philippe Leconte 2024</Copyright>
+    <Copyright>Copyright Â© Jean-Philippe Leconte 2024</Copyright>
     <RepositoryType>git</RepositoryType>
     <RepositoryBranch>main</RepositoryBranch>
     <RepositoryUrl>https://github.com/ins0mniaque/AlignCop</RepositoryUrl>

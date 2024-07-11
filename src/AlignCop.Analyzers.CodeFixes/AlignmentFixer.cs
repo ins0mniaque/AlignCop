@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 
@@ -11,7 +6,7 @@ using AlignCop.Analyzers.Internal;
 
 namespace AlignCop.Analyzers;
 
-public static class AlignmentFixer
+internal static class AlignmentFixer
 {
     public static async Task<Document> FixUnalignment<T>(Document document, IReadOnlyList<T> elements, T firstElement, T lastElement, Func<T, EqualsValueClauseSyntax?> getEqualsValueClause, CancellationToken cancellationToken) where T : SyntaxNode
     {
