@@ -14,7 +14,7 @@ internal static class LocationExtensions
     /// <returns>The location in terms of path, line and column for a given token.</returns>
     internal static FileLinePositionSpan GetLineSpan(this SyntaxToken token)
     {
-        if(token.SyntaxTree is null)
+        if (token.SyntaxTree is null)
             throw new ArgumentException("Token is not part of a syntax tree", nameof(token));
 
         return token.SyntaxTree.GetLineSpan(token.Span);
@@ -37,7 +37,7 @@ internal static class LocationExtensions
     /// <returns>The location in terms of path, line and column for a given trivia.</returns>
     internal static FileLinePositionSpan GetLineSpan(this SyntaxTrivia trivia)
     {
-        if(trivia.SyntaxTree is null)
+        if (trivia.SyntaxTree is null)
             throw new ArgumentException("Trivia is not part of a syntax tree", nameof(trivia));
 
         return trivia.SyntaxTree.GetLineSpan(trivia.Span);
@@ -50,7 +50,7 @@ internal static class LocationExtensions
     /// <returns>The location in terms of path, line and column for a given node or token.</returns>
     internal static FileLinePositionSpan GetLineSpan(this SyntaxNodeOrToken nodeOrToken)
     {
-        if(nodeOrToken.SyntaxTree is null)
+        if (nodeOrToken.SyntaxTree is null)
             throw new ArgumentException("Node or token is not part of a syntax tree", nameof(nodeOrToken));
 
         return nodeOrToken.SyntaxTree.GetLineSpan(nodeOrToken.Span);

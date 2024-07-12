@@ -15,10 +15,10 @@ namespace AlignCop.Analyzers.Tests
             {
                 SolutionTransforms.Add((solution, projectId) =>
                 {
-                    if(solution.GetProject(projectId) is not { } project)
+                    if (solution.GetProject(projectId) is not { } project)
                         throw new ArgumentException($"Project {projectId} not found", nameof(projectId));
 
-                    if(project.CompilationOptions is not { } compilationOptions)
+                    if (project.CompilationOptions is not { } compilationOptions)
                         throw new ArgumentException($"Project {projectId} compilation options are missing", nameof(projectId));
 
                     compilationOptions = compilationOptions.WithSpecificDiagnosticOptions(
