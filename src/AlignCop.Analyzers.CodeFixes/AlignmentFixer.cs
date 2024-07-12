@@ -1,4 +1,6 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using System.Runtime.CompilerServices;
+
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 
 namespace AlignCop.Analyzers;
@@ -44,7 +46,7 @@ internal static class AlignmentFixer
 
             var column = columns[index];
             if (column < maxColumn)
-                changes.Add(new TextChange(new TextSpan(nodeToAlign.Span.Start, 0), new string(' ', maxColumn - column)));
+                changes.Add(GenerateAlignmentChange(nodeToAlign, maxColumn - column));
         }
 
         if (changes.Count is 0)
@@ -110,14 +112,14 @@ internal static class AlignmentFixer
             var changeA = 0;
             var columnA = columnsA[index];
             if (columnA < maxColumnA)
-                changes.Add(new TextChange(new TextSpan(nodeToAlignA.Span.Start, 0), new string(' ', changeA = maxColumnA - columnA)));
+                changes.Add(GenerateAlignmentChange(nodeToAlignA, changeA = maxColumnA - columnA));
 
             if (nodeToAlignB is null)
                 continue;
 
             var columnB = columnsB[index];
             if (columnB >= 0 && columnB + changeA < maxColumnB)
-                changes.Add(new TextChange(new TextSpan(nodeToAlignB.Span.Start, 0), new string(' ', maxColumnB - columnB - changeA)));
+                changes.Add(GenerateAlignmentChange(nodeToAlignB, maxColumnB - columnB - changeA));
         }
 
         if (changes.Count is 0)
@@ -126,6 +128,12 @@ internal static class AlignmentFixer
         var text = await document.GetTextAsync(cancellationToken).ConfigureAwait(false);
 
         return document.WithText(text.WithChanges(changes));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static TextChange GenerateAlignmentChange(SyntaxNode node, int spaces)
+    {
+        return new TextChange(new TextSpan(node.Span.Start, 0), new string(' ', spaces));
     }
 
     private static void IndexOfStartAndLength<T>(IReadOnlyList<T> nodes, T firstNode, T lastNode, out int startIndex, out int length) where T : SyntaxNode
