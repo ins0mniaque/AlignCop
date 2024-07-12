@@ -5,20 +5,20 @@ namespace AlignCop.Analyzers;
 
 internal static class AlignmentAnalyzer
 {
-    public static IEnumerable<List<Location>> FindUnalignments<T>(IReadOnlyList<T> elements, Selector<T, SyntaxNode?> getNodeToAlign) where T : SyntaxNode
+    public static IEnumerable<List<Location>> FindUnalignments<T>(IReadOnlyList<T> nodes, Selector<T, SyntaxNode?> getNodeToAlign) where T : SyntaxNode
     {
-        if (elements.Count < 2)
+        if (nodes.Count < 2)
             yield break;
 
         var previousLineSpan = default(FileLinePositionSpan);
         var startIndex       = -1;
 
-        for (var index = 0; index < elements.Count; index++)
+        for (var index = 0; index < nodes.Count; index++)
         {
-            var element  = elements[index];
-            var lineSpan = element.GetLineSpan();
+            var node     = nodes[index];
+            var lineSpan = node.GetLineSpan();
 
-            getNodeToAlign(element, out var nodeToAlign);
+            getNodeToAlign(node, out var nodeToAlign);
 
             var spansMultipleLine = lineSpan.StartLinePosition.Line != lineSpan.EndLinePosition.Line;
             var isNotOnNextLine   = index > 0 && (previousLineSpan.StartLinePosition.Character != lineSpan.StartLinePosition.Character ||
@@ -26,7 +26,7 @@ internal static class AlignmentAnalyzer
 
             if (spansMultipleLine || isNotOnNextLine || nodeToAlign is null)
             {
-                if (startIndex >= 0 && FindUnalignment(elements, getNodeToAlign, startIndex, index - startIndex) is { } unalignment)
+                if (startIndex >= 0 && FindUnalignment(nodes, getNodeToAlign, startIndex, index - startIndex) is { } unalignment)
                     yield return unalignment;
 
                 startIndex = spansMultipleLine || nodeToAlign is null ? -1 : index;
@@ -37,24 +37,24 @@ internal static class AlignmentAnalyzer
             previousLineSpan = lineSpan;
         }
 
-        if (startIndex >= 0 && FindUnalignment(elements, getNodeToAlign, startIndex, elements.Count - startIndex) is { } lastUnalignment)
+        if (startIndex >= 0 && FindUnalignment(nodes, getNodeToAlign, startIndex, nodes.Count - startIndex) is { } lastUnalignment)
             yield return lastUnalignment;
     }
 
-    public static IEnumerable<List<Location>> FindUnalignments<T>(IReadOnlyList<T> elements, Selector<T, SyntaxNode?, SyntaxNode?> getNodesToAlign) where T : SyntaxNode
+    public static IEnumerable<List<Location>> FindUnalignments<T>(IReadOnlyList<T> nodes, Selector<T, SyntaxNode?, SyntaxNode?> getNodesToAlign) where T : SyntaxNode
     {
-        if (elements.Count < 2)
+        if (nodes.Count < 2)
             yield break;
 
         var previousLineSpan = default(FileLinePositionSpan);
         var startIndex       = -1;
 
-        for (var index = 0; index < elements.Count; index++)
+        for (var index = 0; index < nodes.Count; index++)
         {
-            var element  = elements[index];
-            var lineSpan = element.GetLineSpan();
+            var node     = nodes[index];
+            var lineSpan = node.GetLineSpan();
 
-            getNodesToAlign(element, out var nodeToAlignA, out _);
+            getNodesToAlign(node, out var nodeToAlignA, out _);
 
             var spansMultipleLine = lineSpan.StartLinePosition.Line != lineSpan.EndLinePosition.Line;
             var isNotOnNextLine   = index > 0 && (previousLineSpan.StartLinePosition.Character != lineSpan.StartLinePosition.Character ||
@@ -62,7 +62,7 @@ internal static class AlignmentAnalyzer
 
             if (spansMultipleLine || isNotOnNextLine || nodeToAlignA is null)
             {
-                if (startIndex >= 0 && FindUnalignment(elements, getNodesToAlign, startIndex, index - startIndex) is { } unalignment)
+                if (startIndex >= 0 && FindUnalignment(nodes, getNodesToAlign, startIndex, index - startIndex) is { } unalignment)
                     yield return unalignment;
 
                 startIndex = spansMultipleLine || nodeToAlignA is null ? -1 : index;
@@ -73,11 +73,11 @@ internal static class AlignmentAnalyzer
             previousLineSpan = lineSpan;
         }
 
-        if (startIndex >= 0 && FindUnalignment(elements, getNodesToAlign, startIndex, elements.Count - startIndex) is { } lastUnalignment)
+        if (startIndex >= 0 && FindUnalignment(nodes, getNodesToAlign, startIndex, nodes.Count - startIndex) is { } lastUnalignment)
             yield return lastUnalignment;
     }
 
-    private static List<Location>? FindUnalignment<T>(IReadOnlyList<T> elements, Selector<T, SyntaxNode?> getNodeToAlign, int startIndex, int length) where T : SyntaxNode
+    private static List<Location>? FindUnalignment<T>(IReadOnlyList<T> nodes, Selector<T, SyntaxNode?> getNodeToAlign, int startIndex, int length) where T : SyntaxNode
     {
         var aligned = true;
 
@@ -86,9 +86,7 @@ internal static class AlignmentAnalyzer
 
         for (var index = 0; index < length; index++)
         {
-            var element = elements[startIndex + index];
-
-            getNodeToAlign(element, out var nodeToAlign);
+            getNodeToAlign(nodes[startIndex + index], out var nodeToAlign);
 
             if (nodeToAlign is null)
             {
@@ -107,12 +105,13 @@ internal static class AlignmentAnalyzer
         if (!aligned)
         {
             var locations = new List<Location>(length);
+
             for (var index = 0; index < length; index++)
             {
                 if (columns[index] < 0)
                     continue;
 
-                getNodeToAlign(elements[startIndex + index], out var nodeToAlign);
+                getNodeToAlign(nodes[startIndex + index], out var nodeToAlign);
 
                 if (nodeToAlign is not null)
                     locations.Add(nodeToAlign.GetLocation());
@@ -124,7 +123,7 @@ internal static class AlignmentAnalyzer
         return null;
     }
 
-    private static List<Location>? FindUnalignment<T>(IReadOnlyList<T> elements, Selector<T, SyntaxNode?, SyntaxNode?> getNodesToAlign, int startIndex, int length) where T : SyntaxNode
+    private static List<Location>? FindUnalignment<T>(IReadOnlyList<T> nodes, Selector<T, SyntaxNode?, SyntaxNode?> getNodesToAlign, int startIndex, int length) where T : SyntaxNode
     {
         var alignedA = true;
         var alignedB = true;
@@ -136,9 +135,7 @@ internal static class AlignmentAnalyzer
 
         for (var index = 0; index < length; index++)
         {
-            var element = elements[startIndex + index];
-
-            getNodesToAlign(element, out var nodeToAlignA, out var nodeToAlignB);
+            getNodesToAlign(nodes[startIndex + index], out var nodeToAlignA, out var nodeToAlignB);
 
             if (nodeToAlignA is null)
             {
@@ -171,11 +168,10 @@ internal static class AlignmentAnalyzer
         if (!alignedA)
         {
             var locations = new List<Location>(length);
+
             for (var index = 0; index < length; index++)
             {
-                var element = elements[startIndex + index];
-
-                getNodesToAlign(element, out var nodeToAlignA, out var nodeToAlignB);
+                getNodesToAlign(nodes[startIndex + index], out var nodeToAlignA, out var nodeToAlignB);
 
                 if (columnsA[index] >= 0 && nodeToAlignA is not null)
                 {
@@ -193,11 +189,10 @@ internal static class AlignmentAnalyzer
         else if (!alignedB)
         {
             var locations = new List<Location>(length);
+
             for (var index = 0; index < length; index++)
             {
-                var element = elements[startIndex + index];
-
-                getNodesToAlign(element, out _, out var nodeToAlignB);
+                getNodesToAlign(nodes[startIndex + index], out _, out var nodeToAlignB);
 
                 if (columnsB[index] >= 0 && nodeToAlignB is not null)
                     locations.Add(nodeToAlignB.GetLocation());

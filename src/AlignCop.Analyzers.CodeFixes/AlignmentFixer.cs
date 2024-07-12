@@ -5,9 +5,9 @@ namespace AlignCop.Analyzers;
 
 internal static class AlignmentFixer
 {
-    public static async Task<Document> FixUnalignment<T>(Document document, IReadOnlyList<T> elements, T firstElement, T lastElement, Selector<T, SyntaxNode?> getNodeToAlign, CancellationToken cancellationToken) where T : SyntaxNode
+    public static async Task<Document> FixUnalignment<T>(Document document, IReadOnlyList<T> nodes, T firstNode, T lastNode, Selector<T, SyntaxNode?> getNodeToAlign, CancellationToken cancellationToken) where T : SyntaxNode
     {
-        IndexOfStartAndLength(elements, firstElement, lastElement, out var startIndex, out var length);
+        IndexOfStartAndLength(nodes, firstNode, lastNode, out var startIndex, out var length);
 
         if (length < 0)
             return document;
@@ -17,9 +17,7 @@ internal static class AlignmentFixer
 
         for (var index = 0; index < length; index++)
         {
-            var element = elements[startIndex + index];
-
-            getNodeToAlign(element, out var nodeToAlign);
+            getNodeToAlign(nodes[startIndex + index], out var nodeToAlign);
 
             if (nodeToAlign is null)
             {
@@ -39,9 +37,7 @@ internal static class AlignmentFixer
 
         for (var index = 0; index < length; index++)
         {
-            var element = elements[startIndex + index];
-
-            getNodeToAlign(element, out var nodeToAlign);
+            getNodeToAlign(nodes[startIndex + index], out var nodeToAlign);
 
             if (nodeToAlign is null)
                 continue;
@@ -59,9 +55,9 @@ internal static class AlignmentFixer
         return document.WithText(text.WithChanges(changes));
     }
 
-    public static async Task<Document> FixUnalignment<T>(Document document, IReadOnlyList<T> elements, T firstElement, T lastElement, Selector<T, SyntaxNode?, SyntaxNode?> getNodesToAlign, CancellationToken cancellationToken) where T : SyntaxNode
+    public static async Task<Document> FixUnalignment<T>(Document document, IReadOnlyList<T> nodes, T firstNode, T lastNode, Selector<T, SyntaxNode?, SyntaxNode?> getNodesToAlign, CancellationToken cancellationToken) where T : SyntaxNode
     {
-        IndexOfStartAndLength(elements, firstElement, lastElement, out var startIndex, out var length);
+        IndexOfStartAndLength(nodes, firstNode, lastNode, out var startIndex, out var length);
 
         if (length < 0)
             return document;
@@ -73,9 +69,7 @@ internal static class AlignmentFixer
 
         for (var index = 0; index < length; index++)
         {
-            var element = elements[startIndex + index];
-
-            getNodesToAlign(element, out var nodeToAlignA, out var nodeToAlignB);
+            getNodesToAlign(nodes[startIndex + index], out var nodeToAlignA, out var nodeToAlignB);
 
             if (nodeToAlignA is null)
             {
@@ -108,9 +102,7 @@ internal static class AlignmentFixer
 
         for (var index = 0; index < length; index++)
         {
-            var element = elements[startIndex + index];
-
-            getNodesToAlign(element, out var nodeToAlignA, out var nodeToAlignB);
+            getNodesToAlign(nodes[startIndex + index], out var nodeToAlignA, out var nodeToAlignB);
 
             if (nodeToAlignA is null)
                 continue;
@@ -136,24 +128,24 @@ internal static class AlignmentFixer
         return document.WithText(text.WithChanges(changes));
     }
 
-    private static void IndexOfStartAndLength<T>(IReadOnlyList<T> elements, T firstElement, T lastElement, out int startIndex, out int length) where T : SyntaxNode
+    private static void IndexOfStartAndLength<T>(IReadOnlyList<T> nodes, T firstNode, T lastNode, out int startIndex, out int length) where T : SyntaxNode
     {
         startIndex = -1;
         length     = -1;
 
-        for (var index = 0; index < elements.Count; index++)
+        for (var index = 0; index < nodes.Count; index++)
         {
-            var element = elements[index];
+            var node = nodes[index];
 
             if (startIndex < 0)
             {
-                if (element == firstElement)
+                if (node == firstNode)
                     startIndex = index;
                 else
                     continue;
             }
 
-            if (element == lastElement)
+            if (node == lastNode)
             {
                 length = index + 1 - startIndex;
                 break;
