@@ -1,4 +1,6 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using System.Runtime.CompilerServices;
+
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 
 namespace AlignCop.Analyzers;
@@ -18,18 +20,21 @@ internal static class AlignmentAnalyzer
             var node     = nodes[index];
             var lineSpan = node.GetLineSpan();
 
-            getNodeToAlign(node, out var nodeToAlign);
+            var alignable = !lineSpan.SpansMultipleLines();
 
-            var spansMultipleLine = lineSpan.StartLinePosition.Line != lineSpan.EndLinePosition.Line;
-            var isNotOnNextLine   = index > 0 && (previousLineSpan.StartLinePosition.Character != lineSpan.StartLinePosition.Character ||
-                                                  previousLineSpan.StartLinePosition.Line + 1  != lineSpan.StartLinePosition.Line);
+            if (alignable)
+            {
+                getNodeToAlign(node, out var nodeToAlign);
 
-            if (spansMultipleLine || isNotOnNextLine || nodeToAlign is null)
+                alignable = nodeToAlign is not null;
+            }
+
+            if (!alignable || index > 0 && !lineSpan.IsOnNextLineAlignedTo(previousLineSpan))
             {
                 if (startIndex >= 0 && FindUnalignment(nodes, getNodeToAlign, startIndex, index - startIndex) is { } unalignment)
                     yield return unalignment;
 
-                startIndex = spansMultipleLine || nodeToAlign is null ? -1 : index;
+                startIndex = alignable ? index : -1;
             }
             else if (startIndex < 0)
                 startIndex = index;
@@ -54,18 +59,21 @@ internal static class AlignmentAnalyzer
             var node     = nodes[index];
             var lineSpan = node.GetLineSpan();
 
-            getNodesToAlign(node, out var nodeToAlignA, out _);
+            var alignable = !lineSpan.SpansMultipleLines();
 
-            var spansMultipleLine = lineSpan.StartLinePosition.Line != lineSpan.EndLinePosition.Line;
-            var isNotOnNextLine   = index > 0 && (previousLineSpan.StartLinePosition.Character != lineSpan.StartLinePosition.Character ||
-                                                  previousLineSpan.StartLinePosition.Line + 1  != lineSpan.StartLinePosition.Line);
+            if (alignable)
+            {
+                getNodesToAlign(node, out var nodeToAlignA, out _);
 
-            if (spansMultipleLine || isNotOnNextLine || nodeToAlignA is null)
+                alignable = nodeToAlignA is not null;
+            }
+
+            if (!alignable || index > 0 && !lineSpan.IsOnNextLineAlignedTo(previousLineSpan))
             {
                 if (startIndex >= 0 && FindUnalignment(nodes, getNodesToAlign, startIndex, index - startIndex) is { } unalignment)
                     yield return unalignment;
 
-                startIndex = spansMultipleLine || nodeToAlignA is null ? -1 : index;
+                startIndex = alignable ? index : -1;
             }
             else if (startIndex < 0)
                 startIndex = index;
@@ -79,10 +87,9 @@ internal static class AlignmentAnalyzer
 
     private static List<Location>? FindUnalignment<T>(IReadOnlyList<T> nodes, Selector<T, SyntaxNode?> getNodeToAlign, int startIndex, int length) where T : SyntaxNode
     {
-        var aligned = true;
-
         var columns     = new int[length];
         var firstColumn = -1;
+        var aligned     = true;
 
         for (var index = 0; index < length; index++)
         {
@@ -94,7 +101,9 @@ internal static class AlignmentAnalyzer
                 continue;
             }
 
-            var column = columns[index] = nodeToAlign.GetLineSpan().StartLinePosition.Character;
+            var column = nodeToAlign.GetLineSpan().StartLinePosition.Character;
+
+            columns[index] = column;
 
             if (firstColumn < 0)
                 firstColumn = column;
@@ -125,13 +134,12 @@ internal static class AlignmentAnalyzer
 
     private static List<Location>? FindUnalignment<T>(IReadOnlyList<T> nodes, Selector<T, SyntaxNode?, SyntaxNode?> getNodesToAlign, int startIndex, int length) where T : SyntaxNode
     {
-        var alignedA = true;
-        var alignedB = true;
-
         var columnsA     = new int[length];
         var columnsB     = new int[length];
         var firstColumnA = -1;
         var firstColumnB = -1;
+        var alignedA     = true;
+        var alignedB     = true;
 
         for (var index = 0; index < length; index++)
         {
@@ -144,7 +152,9 @@ internal static class AlignmentAnalyzer
                 continue;
             }
 
-            var columnA = columnsA[index] = nodeToAlignA.GetLineSpan().StartLinePosition.Character;
+            var columnA = nodeToAlignA.GetLineSpan().StartLinePosition.Character;
+
+            columnsA[index] = columnA;
 
             if (firstColumnA < 0)
                 firstColumnA = columnA;
@@ -157,7 +167,9 @@ internal static class AlignmentAnalyzer
                 continue;
             }
 
-            var columnB = columnsB[index] = nodeToAlignB.GetLineSpan().StartLinePosition.Character;
+            var columnB = nodeToAlignB.GetLineSpan().StartLinePosition.Character;
+
+            columnsB[index] = columnB;
 
             if (firstColumnB < 0)
                 firstColumnB = columnB;
@@ -176,9 +188,7 @@ internal static class AlignmentAnalyzer
                 if (columnsA[index] >= 0 && nodeToAlignA is not null)
                 {
                     if (columnsB[index] >= 0 && nodeToAlignB is not null)
-                        locations.Add(Location.Create(nodeToAlignA.SyntaxTree,
-                                                      TextSpan.FromBounds(nodeToAlignA.GetLocation().SourceSpan.Start,
-                                                                          nodeToAlignB.GetLocation().SourceSpan.End)));
+                        locations.Add(nodeToAlignA.GetLocation().CombineWith(nodeToAlignB.GetLocation()));
                     else
                         locations.Add(nodeToAlignA.GetLocation());
                 }
@@ -209,8 +219,30 @@ internal static class AlignmentAnalyzer
     /// </summary>
     /// <param name="node">The node to use.</param>
     /// <returns>The location in terms of path, line and column for a given node.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static FileLinePositionSpan GetLineSpan(this SyntaxNode node)
     {
         return node.SyntaxTree.GetLineSpan(node.Span);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static Location CombineWith(this Location location, Location otherLocation)
+    {
+        return Location.Create(location.SourceTree ?? throw new ArgumentException("Location must be in a syntax tree", nameof(location)),
+                               TextSpan.FromBounds(location     .SourceSpan.Start,
+                                                   otherLocation.SourceSpan.End));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static bool IsOnNextLineAlignedTo(this FileLinePositionSpan lineSpan, FileLinePositionSpan previousLineSpan)
+    {
+        return lineSpan.StartLinePosition.Character == previousLineSpan.StartLinePosition.Character &&
+               lineSpan.StartLinePosition.Line      == previousLineSpan.StartLinePosition.Line + 1;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static bool SpansMultipleLines(this FileLinePositionSpan lineSpan)
+    {
+        return lineSpan.StartLinePosition.Line != lineSpan.EndLinePosition.Line;
     }
 }
