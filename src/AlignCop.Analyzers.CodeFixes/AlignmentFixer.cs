@@ -7,27 +7,7 @@ internal static class AlignmentFixer
 {
     public static async Task<Document> FixUnalignment<T>(Document document, IReadOnlyList<T> elements, T firstElement, T lastElement, Selector<T, SyntaxNode?> getNodeToAlign, CancellationToken cancellationToken) where T : SyntaxNode
     {
-        var startIndex = -1;
-        var length     = -1;
-
-        for (var index = 0; index < elements.Count; index++)
-        {
-            var element = elements[index];
-
-            if (startIndex < 0)
-            {
-                if (element == firstElement)
-                    startIndex = index;
-                else
-                    continue;
-            }
-
-            if (element == lastElement)
-            {
-                length = index + 1 - startIndex;
-                break;
-            }
-        }
+        IndexOfStartAndLength(elements, firstElement, lastElement, out var startIndex, out var length);
 
         if (length < 0)
             return document;
@@ -55,7 +35,6 @@ internal static class AlignmentFixer
         if (maxColumn < 0)
             return document;
 
-        var text    = await document.GetTextAsync(cancellationToken).ConfigureAwait(false);
         var changes = new List<TextChange>(length);
 
         for (var index = 0; index < length; index++)
@@ -75,32 +54,14 @@ internal static class AlignmentFixer
         if (changes.Count is 0)
             return document;
 
+        var text = await document.GetTextAsync(cancellationToken).ConfigureAwait(false);
+
         return document.WithText(text.WithChanges(changes));
     }
 
     public static async Task<Document> FixUnalignment<T>(Document document, IReadOnlyList<T> elements, T firstElement, T lastElement, Selector<T, SyntaxNode?, SyntaxNode?> getNodesToAlign, CancellationToken cancellationToken) where T : SyntaxNode
     {
-        var startIndex = -1;
-        var length     = -1;
-
-        for (var index = 0; index < elements.Count; index++)
-        {
-            var element = elements[index];
-
-            if (startIndex < 0)
-            {
-                if (element == firstElement)
-                    startIndex = index;
-                else
-                    continue;
-            }
-
-            if (element == lastElement)
-            {
-                length = index + 1 - startIndex;
-                break;
-            }
-        }
+        IndexOfStartAndLength(elements, firstElement, lastElement, out var startIndex, out var length);
 
         if (length < 0)
             return document;
@@ -173,5 +134,30 @@ internal static class AlignmentFixer
         var text = await document.GetTextAsync(cancellationToken).ConfigureAwait(false);
 
         return document.WithText(text.WithChanges(changes));
+    }
+
+    private static void IndexOfStartAndLength<T>(IReadOnlyList<T> elements, T firstElement, T lastElement, out int startIndex, out int length) where T : SyntaxNode
+    {
+        startIndex = -1;
+        length     = -1;
+
+        for (var index = 0; index < elements.Count; index++)
+        {
+            var element = elements[index];
+
+            if (startIndex < 0)
+            {
+                if (element == firstElement)
+                    startIndex = index;
+                else
+                    continue;
+            }
+
+            if (element == lastElement)
+            {
+                length = index + 1 - startIndex;
+                break;
+            }
+        }
     }
 }
