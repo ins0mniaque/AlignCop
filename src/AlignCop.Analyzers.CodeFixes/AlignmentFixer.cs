@@ -7,14 +7,26 @@ namespace AlignCop.Analyzers;
 
 internal static class AlignmentFixer
 {
-    public static async Task<Document> FixUnalignment<T>(Document document, IReadOnlyList<T> nodes, T firstNode, T lastNode, Selector<T, SyntaxNode?> getNodeToAlign, CancellationToken cancellationToken) where T : SyntaxNode
+    public static async Task<Document> FixAlignment<T>(Document document, IReadOnlyList<T> nodes, T firstNode, T lastNode, Selector<T, SyntaxNode?> getNodeToAlign, CancellationToken cancellationToken) where T : SyntaxNode
+    {
+        if (GenerateAlignmentFix(nodes, firstNode, lastNode, getNodeToAlign) is not { } changes)
+            return document;
+
+        var text = await document.GetTextAsync(cancellationToken).ConfigureAwait(false);
+
+        return document.WithText(text.WithChanges(changes));
+    }
+
+    private static unsafe List<TextChange>? GenerateAlignmentFix<T>(IReadOnlyList<T> nodes, T firstNode, T lastNode, Selector<T, SyntaxNode?> getNodeToAlign) where T : SyntaxNode
     {
         IndexOfStartAndLength(nodes, firstNode, lastNode, out var startIndex, out var length);
 
         if (length < 0)
-            return document;
+            return null;
 
-        var columns   = new int[length];
+        const int stackallocThreshold = Allocator.MaximumStackAllocationSize / sizeof(int);
+
+        var columns   = length <= stackallocThreshold ? stackalloc int[length] : new int[length];
         var maxColumn = -1;
 
         for (var index = 0; index < length; index++)
@@ -33,7 +45,7 @@ internal static class AlignmentFixer
         }
 
         if (maxColumn < 0)
-            return document;
+            return null;
 
         var changes = new List<TextChange>(length);
 
@@ -50,6 +62,14 @@ internal static class AlignmentFixer
         }
 
         if (changes.Count is 0)
+            return null;
+
+        return changes;
+    }
+
+    public static async Task<Document> FixAlignment<T>(Document document, IReadOnlyList<T> nodes, T firstNode, T lastNode, Selector<T, SyntaxNode?, SyntaxNode?> getNodesToAlign, CancellationToken cancellationToken) where T : SyntaxNode
+    {
+        if (GenerateAlignmentFix(nodes, firstNode, lastNode, getNodesToAlign) is not { } changes)
             return document;
 
         var text = await document.GetTextAsync(cancellationToken).ConfigureAwait(false);
@@ -57,15 +77,17 @@ internal static class AlignmentFixer
         return document.WithText(text.WithChanges(changes));
     }
 
-    public static async Task<Document> FixUnalignment<T>(Document document, IReadOnlyList<T> nodes, T firstNode, T lastNode, Selector<T, SyntaxNode?, SyntaxNode?> getNodesToAlign, CancellationToken cancellationToken) where T : SyntaxNode
+    private static unsafe List<TextChange>? GenerateAlignmentFix<T>(IReadOnlyList<T> nodes, T firstNode, T lastNode, Selector<T, SyntaxNode?, SyntaxNode?> getNodesToAlign) where T : SyntaxNode
     {
         IndexOfStartAndLength(nodes, firstNode, lastNode, out var startIndex, out var length);
 
         if (length < 0)
-            return document;
+            return null;
 
-        var columnsA   = new int[length];
-        var columnsB   = new int[length];
+        const int stackallocThreshold = Allocator.MaximumStackAllocationSize / sizeof(int) / 2;
+
+        var columnsA   = length <= stackallocThreshold ? stackalloc int[length] : new int[length];
+        var columnsB   = length <= stackallocThreshold ? stackalloc int[length] : new int[length];
         var maxColumnA = -1;
         var maxColumnB = -1;
 
@@ -98,7 +120,7 @@ internal static class AlignmentFixer
         }
 
         if (maxColumnA < 0)
-            return document;
+            return null;
 
         var changes = new List<TextChange>(length);
 
@@ -123,11 +145,9 @@ internal static class AlignmentFixer
         }
 
         if (changes.Count is 0)
-            return document;
+            return null;
 
-        var text = await document.GetTextAsync(cancellationToken).ConfigureAwait(false);
-
-        return document.WithText(text.WithChanges(changes));
+        return changes;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

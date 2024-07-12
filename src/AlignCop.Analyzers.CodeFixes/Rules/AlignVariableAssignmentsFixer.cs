@@ -34,7 +34,7 @@ public sealed class AlignVariableAssignmentsFixer : CodeFixProvider
         context.RegisterCodeFix(
             CodeAction.Create(
                 title: CodeFixResources.AlignVariableAssignmentsCodeFixTitle,
-                createChangedDocument: cancellationToken => AlignmentFixer.FixUnalignment(context.Document, block.Statements, firstVariableAssignment, lastVariableAssignment, AlignVariableAssignmentsAnalyzer.GetNodesToAlignSelector, cancellationToken),
+                createChangedDocument: cancellationToken => AlignmentFixer.FixAlignment(context.Document, block.Statements, firstVariableAssignment, lastVariableAssignment, AlignVariableAssignmentsAnalyzer.GetNodesToAlignSelector, cancellationToken),
                 equivalenceKey: nameof(CodeFixResources.AlignVariableAssignmentsCodeFixTitle)),
             diagnostic);
     }

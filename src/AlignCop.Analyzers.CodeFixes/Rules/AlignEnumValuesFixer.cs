@@ -34,7 +34,7 @@ public sealed class AlignEnumValuesFixer : CodeFixProvider
         context.RegisterCodeFix(
             CodeAction.Create(
                 title: CodeFixResources.AlignEnumValuesCodeFixTitle,
-                createChangedDocument: cancellationToken => AlignmentFixer.FixUnalignment(context.Document, enumDeclaration.Members, firstEnumMember, lastEnumMember, AlignEnumValuesAnalyzer.GetNodeToAlignSelector, cancellationToken),
+                createChangedDocument: cancellationToken => AlignmentFixer.FixAlignment(context.Document, enumDeclaration.Members, firstEnumMember, lastEnumMember, AlignEnumValuesAnalyzer.GetNodeToAlignSelector, cancellationToken),
                 equivalenceKey: nameof(CodeFixResources.AlignEnumValuesCodeFixTitle)),
             diagnostic);
     }

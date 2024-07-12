@@ -87,7 +87,9 @@ internal static class AlignmentAnalyzer
 
     private static Unalignment? FindUnalignment<T>(IReadOnlyList<T> nodes, Selector<T, SyntaxNode?> getNodeToAlign, int startIndex, int length) where T : SyntaxNode
     {
-        var columns     = new int[length];
+        const int stackallocThreshold = Allocator.MaximumStackAllocationSize / sizeof(int);
+
+        var columns     = length <= stackallocThreshold ? stackalloc int[length] : new int[length];
         var firstColumn = -1;
         var aligned     = true;
 
@@ -132,10 +134,12 @@ internal static class AlignmentAnalyzer
         return null;
     }
 
-    private static Unalignment? FindUnalignment<T>(IReadOnlyList<T> nodes, Selector<T, SyntaxNode?, SyntaxNode?> getNodesToAlign, int startIndex, int length) where T : SyntaxNode
+    private static unsafe Unalignment? FindUnalignment<T>(IReadOnlyList<T> nodes, Selector<T, SyntaxNode?, SyntaxNode?> getNodesToAlign, int startIndex, int length) where T : SyntaxNode
     {
-        var columnsA     = new int[length];
-        var columnsB     = new int[length];
+        const int stackallocThreshold = Allocator.MaximumStackAllocationSize / sizeof(int) / 2;
+
+        var columnsA     = length <= stackallocThreshold ? stackalloc int[length] : new int[length];
+        var columnsB     = length <= stackallocThreshold ? stackalloc int[length] : new int[length];
         var firstColumnA = -1;
         var firstColumnB = -1;
         var alignedA     = true;
