@@ -20,15 +20,16 @@ internal static class AlignmentAnalyzer
 
             getNodeToAlign(element, out var nodeToAlign);
 
-            var isNotOnNextLine = index > 0 && (previousLineSpan.StartLinePosition.Character != lineSpan.StartLinePosition.Character ||
-                                                previousLineSpan.StartLinePosition.Line + 1  != lineSpan.StartLinePosition.Line);
+            var spansMultipleLine = lineSpan.StartLinePosition.Line != lineSpan.EndLinePosition.Line;
+            var isNotOnNextLine   = index > 0 && (previousLineSpan.StartLinePosition.Character != lineSpan.StartLinePosition.Character ||
+                                                  previousLineSpan.StartLinePosition.Line + 1  != lineSpan.StartLinePosition.Line);
 
-            if (isNotOnNextLine || nodeToAlign is null)
+            if (spansMultipleLine || isNotOnNextLine || nodeToAlign is null)
             {
                 if (startIndex >= 0 && FindUnalignment(elements, getNodeToAlign, startIndex, index - startIndex) is { } unalignment)
                     yield return unalignment;
 
-                startIndex = nodeToAlign is null ? -1 : index;
+                startIndex = spansMultipleLine || nodeToAlign is null ? -1 : index;
             }
             else if (startIndex < 0)
                 startIndex = index;
@@ -55,15 +56,16 @@ internal static class AlignmentAnalyzer
 
             getNodesToAlign(element, out var nodeToAlignA, out _);
 
-            var isNotOnNextLine = index > 0 && (previousLineSpan.StartLinePosition.Character != lineSpan.StartLinePosition.Character ||
-                                                previousLineSpan.StartLinePosition.Line + 1  != lineSpan.StartLinePosition.Line);
+            var spansMultipleLine = lineSpan.StartLinePosition.Line != lineSpan.EndLinePosition.Line;
+            var isNotOnNextLine   = index > 0 && (previousLineSpan.StartLinePosition.Character != lineSpan.StartLinePosition.Character ||
+                                                  previousLineSpan.StartLinePosition.Line + 1  != lineSpan.StartLinePosition.Line);
 
-            if (isNotOnNextLine || nodeToAlignA is null)
+            if (spansMultipleLine || isNotOnNextLine || nodeToAlignA is null)
             {
                 if (startIndex >= 0 && FindUnalignment(elements, getNodesToAlign, startIndex, index - startIndex) is { } unalignment)
                     yield return unalignment;
 
-                startIndex = nodeToAlignA is null ? -1 : index;
+                startIndex = spansMultipleLine || nodeToAlignA is null ? -1 : index;
             }
             else if (startIndex < 0)
                 startIndex = index;
