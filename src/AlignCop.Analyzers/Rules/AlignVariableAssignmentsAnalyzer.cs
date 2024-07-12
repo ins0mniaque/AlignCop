@@ -46,7 +46,9 @@ public sealed class AlignVariableAssignmentsAnalyzer : DiagnosticAnalyzer
 
     private static EqualsValueClauseSyntax? GetEqualsValueClause(StatementSyntax statementSyntax)
     {
-        if (statementSyntax is LocalDeclarationStatementSyntax localDeclarationStatement && localDeclarationStatement.Declaration.Variables.Count is 1)
+        if (statementSyntax.RawKind is (int)SyntaxKind.LocalDeclarationStatement &&
+            statementSyntax is LocalDeclarationStatementSyntax localDeclarationStatement &&
+            localDeclarationStatement.Declaration.Variables.Count is 1)
             return localDeclarationStatement.Declaration.Variables[0].Initializer;
 
         return null;

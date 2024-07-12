@@ -4,6 +4,7 @@ using System.Composition;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace AlignCop.Analyzers.Rules;
@@ -43,7 +44,9 @@ public sealed class AlignVariableAssignmentsFixer : CodeFixProvider
 
     private static EqualsValueClauseSyntax? GetEqualsValueClause(StatementSyntax statementSyntax)
     {
-        if (statementSyntax is LocalDeclarationStatementSyntax localDeclarationStatement && localDeclarationStatement.Declaration.Variables.Count is 1)
+        if (statementSyntax.RawKind is (int)SyntaxKind.LocalDeclarationStatement &&
+            statementSyntax is LocalDeclarationStatementSyntax localDeclarationStatement &&
+            localDeclarationStatement.Declaration.Variables.Count is 1)
             return localDeclarationStatement.Declaration.Variables[0].Initializer;
 
         return null;
