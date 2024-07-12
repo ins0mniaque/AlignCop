@@ -1,13 +1,11 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 
-using AlignCop.Analyzers.Internal;
-
 namespace AlignCop.Analyzers;
 
 internal static class AlignmentFixer
 {
-    public static async Task<Document> FixUnalignment<T>(Document document, IReadOnlyList<T> elements, T firstElement, T lastElement, Func<T, SyntaxNode?> getNodeToAlign, CancellationToken cancellationToken) where T : SyntaxNode
+    public static async Task<Document> FixUnalignment<T>(Document document, IReadOnlyList<T> elements, T firstElement, T lastElement, Selector<T, SyntaxNode?> getNodeToAlign, CancellationToken cancellationToken) where T : SyntaxNode
     {
         var startIndex = -1;
         var length     = -1;
@@ -41,7 +39,9 @@ internal static class AlignmentFixer
         {
             var element = elements[startIndex + index];
 
-            if (getNodeToAlign(element) is not { } nodeToAlign)
+            getNodeToAlign(element, out var nodeToAlign);
+
+            if (nodeToAlign is null)
             {
                 columns[index] = -1;
                 continue;
@@ -61,7 +61,10 @@ internal static class AlignmentFixer
         for (var index = 0; index < length; index++)
         {
             var element = elements[startIndex + index];
-            if (getNodeToAlign(element) is not { } nodeToAlign)
+
+            getNodeToAlign(element, out var nodeToAlign);
+
+            if (nodeToAlign is null)
                 continue;
 
             var column = columns[index];
@@ -75,7 +78,7 @@ internal static class AlignmentFixer
         return document.WithText(text.WithChanges(changes));
     }
 
-    public static async Task<Document> FixUnalignment<T>(Document document, IReadOnlyList<T> elements, T firstElement, T lastElement, Func<T, SyntaxNode?> getLeftNodeToAlign, Func<T, SyntaxNode?> getRightNodeToAlign, CancellationToken cancellationToken) where T : SyntaxNode
+    public static async Task<Document> FixUnalignment<T>(Document document, IReadOnlyList<T> elements, T firstElement, T lastElement, Selector<T, SyntaxNode?, SyntaxNode?> getNodesToAlign, CancellationToken cancellationToken) where T : SyntaxNode
     {
         var startIndex = -1;
         var length     = -1;
@@ -102,40 +105,42 @@ internal static class AlignmentFixer
         if (length < 0)
             return document;
 
-        var leftColumns    = new int[length];
-        var rightColumns   = new int[length];
-        var maxLeftColumn  = -1;
-        var maxRightColumn = -1;
+        var columnsA   = new int[length];
+        var columnsB   = new int[length];
+        var maxColumnA = -1;
+        var maxColumnB = -1;
 
         for (var index = 0; index < length; index++)
         {
             var element = elements[startIndex + index];
 
-            if (getLeftNodeToAlign(element) is not { } leftNodeToAlign)
+            getNodesToAlign(element, out var nodeToAlignA, out var nodeToAlignB);
+
+            if (nodeToAlignA is null)
             {
-                leftColumns[index]  = -1;
-                rightColumns[index] = -1;
+                columnsA[index] = -1;
+                columnsB[index] = -1;
                 continue;
             }
 
-            var leftColumn = leftColumns[index] = leftNodeToAlign.GetLineSpan().StartLinePosition.Character;
+            var columnA = columnsA[index] = nodeToAlignA.GetLineSpan().StartLinePosition.Character;
 
-            if (leftColumn > maxLeftColumn)
-                maxLeftColumn = leftColumn;
+            if (columnA > maxColumnA)
+                maxColumnA = columnA;
 
-            if (getRightNodeToAlign(element) is not { } rightNodeToAlign)
+            if (nodeToAlignB is null)
             {
-                rightColumns[index] = -1;
+                columnsB[index] = -1;
                 continue;
             }
 
-            var rightColumn = rightColumns[index] = rightNodeToAlign.GetLineSpan().StartLinePosition.Character;
+            var columnB = columnsB[index] = nodeToAlignB.GetLineSpan().StartLinePosition.Character;
 
-            if (rightColumn > maxRightColumn)
-                maxRightColumn = rightColumn;
+            if (columnB > maxColumnB)
+                maxColumnB = columnB;
         }
 
-        if (maxLeftColumn < 0)
+        if (maxColumnA < 0)
             return document;
 
         var text    = await document.GetTextAsync(cancellationToken).ConfigureAwait(false);
@@ -144,20 +149,23 @@ internal static class AlignmentFixer
         for (var index = 0; index < length; index++)
         {
             var element = elements[startIndex + index];
-            if (getLeftNodeToAlign(element) is not { } leftNodeToAlign)
+
+            getNodesToAlign(element, out var nodeToAlignA, out var nodeToAlignB);
+
+            if (nodeToAlignA is null)
                 continue;
 
-            var leftChange = 0;
-            var leftColumn = leftColumns[index];
-            if (leftColumn < maxLeftColumn)
-                changes.Add(new TextChange(new TextSpan(leftNodeToAlign.Span.Start, 0), new string(' ', leftChange = maxLeftColumn - leftColumn)));
+            var changeA = 0;
+            var columnA = columnsA[index];
+            if (columnA < maxColumnA)
+                changes.Add(new TextChange(new TextSpan(nodeToAlignA.Span.Start, 0), new string(' ', changeA = maxColumnA - columnA)));
 
-            if (getRightNodeToAlign(element) is not { } rightNodeToAlign)
+            if (nodeToAlignB is null)
                 continue;
 
-            var rightColumn = rightColumns[index];
-            if (rightColumn >= 0 && rightColumn + leftChange < maxRightColumn)
-                changes.Add(new TextChange(new TextSpan(rightNodeToAlign.Span.Start, 0), new string(' ', maxRightColumn - rightColumn - leftChange)));
+            var columnB = columnsB[index];
+            if (columnB >= 0 && columnB + changeA < maxColumnB)
+                changes.Add(new TextChange(new TextSpan(nodeToAlignB.Span.Start, 0), new string(' ', maxColumnB - columnB - changeA)));
         }
 
         if (changes.Count is 0)

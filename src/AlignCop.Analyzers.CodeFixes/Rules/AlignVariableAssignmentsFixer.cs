@@ -4,7 +4,6 @@ using System.Composition;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
-using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace AlignCop.Analyzers.Rules;
@@ -35,31 +34,8 @@ public sealed class AlignVariableAssignmentsFixer : CodeFixProvider
         context.RegisterCodeFix(
             CodeAction.Create(
                 title: CodeFixResources.AlignVariableAssignmentsCodeFixTitle,
-                createChangedDocument: cancellationToken => AlignmentFixer.FixUnalignment(context.Document, block.Statements, firstVariableAssignment, lastVariableAssignment, GetVariableDeclaratorFunc, GetVariableInitializerFunc, cancellationToken),
+                createChangedDocument: cancellationToken => AlignmentFixer.FixUnalignment(context.Document, block.Statements, firstVariableAssignment, lastVariableAssignment, AlignVariableAssignmentsAnalyzer.GetNodesToAlignSelector, cancellationToken),
                 equivalenceKey: nameof(CodeFixResources.AlignVariableAssignmentsCodeFixTitle)),
             diagnostic);
-    }
-
-    private static readonly Func<StatementSyntax, SyntaxNode?> GetVariableDeclaratorFunc  = GetVariableDeclarator;
-    private static readonly Func<StatementSyntax, SyntaxNode?> GetVariableInitializerFunc = GetVariableInitializer;
-
-    private static SyntaxNode? GetVariableDeclarator(StatementSyntax statementSyntax)
-    {
-        if (statementSyntax.RawKind is (int)SyntaxKind.LocalDeclarationStatement &&
-            statementSyntax is LocalDeclarationStatementSyntax localDeclarationStatement &&
-            localDeclarationStatement.Declaration.Variables.Count is 1)
-            return localDeclarationStatement.Declaration.Variables[0];
-
-        return null;
-    }
-
-    private static SyntaxNode? GetVariableInitializer(StatementSyntax statementSyntax)
-    {
-        if (statementSyntax.RawKind is (int)SyntaxKind.LocalDeclarationStatement &&
-            statementSyntax is LocalDeclarationStatementSyntax localDeclarationStatement &&
-            localDeclarationStatement.Declaration.Variables.Count is 1)
-            return localDeclarationStatement.Declaration.Variables[0].Initializer;
-
-        return null;
     }
 }

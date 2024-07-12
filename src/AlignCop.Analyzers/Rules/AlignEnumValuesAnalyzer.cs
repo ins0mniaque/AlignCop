@@ -33,19 +33,19 @@ public sealed class AlignEnumValuesAnalyzer : DiagnosticAnalyzer
         context.RegisterSyntaxNodeAction(AnalyzeEnumDeclarationAction, SyntaxKind.EnumDeclaration);
     }
 
-    private static readonly Action<SyntaxNodeAnalysisContext>              AnalyzeEnumDeclarationAction = AnalyzeEnumDeclaration;
-    private static readonly Func<EnumMemberDeclarationSyntax, SyntaxNode?> GetEqualsValueFunc           = GetEqualsValue;
+    private  static readonly Action<SyntaxNodeAnalysisContext>                  AnalyzeEnumDeclarationAction = AnalyzeEnumDeclaration;
+    internal static readonly Selector<EnumMemberDeclarationSyntax, SyntaxNode?> GetNodeToAlignSelector       = GetNodeToAlign;
 
     private static void AnalyzeEnumDeclaration(SyntaxNodeAnalysisContext context)
     {
         var enumDeclaration = (EnumDeclarationSyntax)context.Node;
 
-        foreach (var unalignment in AlignmentAnalyzer.FindUnalignments(enumDeclaration.Members, GetEqualsValueFunc))
+        foreach (var unalignment in AlignmentAnalyzer.FindUnalignments(enumDeclaration.Members, GetNodeToAlignSelector))
             context.ReportDiagnostic(Diagnostic.Create(Rule, unalignment[0], unalignment.Skip(1), enumDeclaration.Identifier.Text));
     }
 
-    private static SyntaxNode? GetEqualsValue(EnumMemberDeclarationSyntax enumDeclaration)
+    private static void GetNodeToAlign(EnumMemberDeclarationSyntax enumDeclaration, out SyntaxNode? nodeToAlign)
     {
-        return enumDeclaration.EqualsValue;
+        nodeToAlign = enumDeclaration.EqualsValue;
     }
 }

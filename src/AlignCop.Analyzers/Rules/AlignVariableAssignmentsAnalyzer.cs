@@ -33,35 +33,32 @@ public sealed class AlignVariableAssignmentsAnalyzer : DiagnosticAnalyzer
         context.RegisterSyntaxNodeAction(AnalyzeBlockAction, SyntaxKind.Block);
     }
 
-    private static readonly Action<SyntaxNodeAnalysisContext>  AnalyzeBlockAction         = AnalyzeBlock;
-    private static readonly Func<StatementSyntax, SyntaxNode?> GetVariableDeclaratorFunc  = GetVariableDeclarator;
-    private static readonly Func<StatementSyntax, SyntaxNode?> GetVariableInitializerFunc = GetVariableInitializer;
+    private  static readonly Action<SyntaxNodeAnalysisContext>                   AnalyzeBlockAction      = AnalyzeBlock;
+    internal static readonly Selector<StatementSyntax, SyntaxNode?, SyntaxNode?> GetNodesToAlignSelector = GetNodesToAlign;
 
     private static void AnalyzeBlock(SyntaxNodeAnalysisContext context)
     {
         var block = (BlockSyntax)context.Node;
 
-        foreach (var unalignment in AlignmentAnalyzer.FindUnalignments(block.Statements, GetVariableDeclaratorFunc, GetVariableInitializerFunc))
+        foreach (var unalignment in AlignmentAnalyzer.FindUnalignments(block.Statements, GetNodesToAlignSelector))
             context.ReportDiagnostic(Diagnostic.Create(Rule, unalignment[0], unalignment.Skip(1)));
     }
 
-    private static SyntaxNode? GetVariableDeclarator(StatementSyntax statementSyntax)
+    private static void GetNodesToAlign(StatementSyntax statementSyntax, out SyntaxNode? nodeToAlignA, out SyntaxNode? nodeToAlignB)
     {
         if (statementSyntax.RawKind is (int)SyntaxKind.LocalDeclarationStatement &&
             statementSyntax is LocalDeclarationStatementSyntax localDeclarationStatement &&
             localDeclarationStatement.Declaration.Variables.Count is 1)
-            return localDeclarationStatement.Declaration.Variables[0];
+        {
+            var variable = localDeclarationStatement.Declaration.Variables[0];
 
-        return null;
-    }
-
-    private static SyntaxNode? GetVariableInitializer(StatementSyntax statementSyntax)
-    {
-        if (statementSyntax.RawKind is (int)SyntaxKind.LocalDeclarationStatement &&
-            statementSyntax is LocalDeclarationStatementSyntax localDeclarationStatement &&
-            localDeclarationStatement.Declaration.Variables.Count is 1)
-            return localDeclarationStatement.Declaration.Variables[0].Initializer;
-
-        return null;
+            nodeToAlignA = variable;
+            nodeToAlignB = variable.Initializer;
+        }
+        else
+        {
+            nodeToAlignA = null;
+            nodeToAlignB = null;
+        }
     }
 }
