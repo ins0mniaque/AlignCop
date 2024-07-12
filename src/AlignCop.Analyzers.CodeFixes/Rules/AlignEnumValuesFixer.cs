@@ -34,14 +34,14 @@ public sealed class AlignEnumValuesFixer : CodeFixProvider
         context.RegisterCodeFix(
             CodeAction.Create(
                 title: CodeFixResources.AlignEnumValuesCodeFixTitle,
-                createChangedDocument: cancellationToken => AlignmentFixer.FixUnalignment(context.Document, enumDeclaration.Members, firstEnumMember, lastEnumMember, GetEqualsValueClauseFunc, cancellationToken),
+                createChangedDocument: cancellationToken => AlignmentFixer.FixUnalignment(context.Document, enumDeclaration.Members, firstEnumMember, lastEnumMember, GetEqualsValueFunc, cancellationToken),
                 equivalenceKey: nameof(CodeFixResources.AlignEnumValuesCodeFixTitle)),
             diagnostic);
     }
 
-    private static readonly Func<EnumMemberDeclarationSyntax, EqualsValueClauseSyntax?> GetEqualsValueClauseFunc = GetEqualsValueClause;
+    private static readonly Func<EnumMemberDeclarationSyntax, SyntaxNode?> GetEqualsValueFunc = GetEqualsValue;
 
-    private static EqualsValueClauseSyntax? GetEqualsValueClause(EnumMemberDeclarationSyntax enumDeclaration)
+    private static SyntaxNode? GetEqualsValue(EnumMemberDeclarationSyntax enumDeclaration)
     {
         return enumDeclaration.EqualsValue;
     }

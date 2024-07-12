@@ -35,7 +35,7 @@ public class AlignVariableAssignmentsTests
     }
 
     [TestMethod]
-    public async Task AlignedLocalAssignments()
+    public async Task AlignedVarAssignments()
     {
         var source = """
             namespace AlignVariableAssignments
@@ -56,7 +56,28 @@ public class AlignVariableAssignmentsTests
     }
 
     [TestMethod]
-    public async Task UnalignedLocalAssignments()
+    public async Task AlignedAssignments()
+    {
+        var source = """
+            namespace AlignVariableAssignments
+            {
+                class ClassToAlign
+                {
+                    void MethodToAlign()
+                    {
+                        int  assignedFirst  = 0;
+                        long assignedSecond = 0;
+                        int  assignedThird  = 0;
+                    }
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(source).ConfigureAwait(false);
+    }
+
+    [TestMethod]
+    public async Task UnalignedVarAssignments()
     {
         var source = """
             namespace AlignVariableAssignments
@@ -83,6 +104,47 @@ public class AlignVariableAssignmentsTests
                         var assignedFirst  = 0;
                         var assignedSecond = 0;
                         var assignedThird  = 0;
+                    }
+                }
+            }
+            """;
+
+        var expected = VerifyCS.Diagnostic(RuleIdentifiers.AlignVariableAssignments)
+                               .WithLocation(0)
+                               .WithLocation(1)
+                               .WithLocation(2);
+
+        await VerifyCS.VerifyCodeFixAsync(source, expected, fixedSource).ConfigureAwait(false);
+    }
+
+    [TestMethod]
+    public async Task UnalignedAssignments()
+    {
+        var source = """
+            namespace AlignVariableAssignments
+            {
+                class ClassToAlign
+                {
+                    void MethodToAlign()
+                    {
+                        int {|#0:assignedFirst = 0|};
+                        long {|#1:assignedSecond = 0|};
+                        int {|#2:assignedThird = 0|};
+                    }
+                }
+            }
+            """;
+
+        var fixedSource = """
+            namespace AlignVariableAssignments
+            {
+                class ClassToAlign
+                {
+                    void MethodToAlign()
+                    {
+                        int  assignedFirst  = 0;
+                        long assignedSecond = 0;
+                        int  assignedThird  = 0;
                     }
                 }
             }

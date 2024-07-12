@@ -33,18 +33,29 @@ public sealed class AlignVariableAssignmentsAnalyzer : DiagnosticAnalyzer
         context.RegisterSyntaxNodeAction(AnalyzeBlockAction, SyntaxKind.Block);
     }
 
-    private static readonly Action<SyntaxNodeAnalysisContext>               AnalyzeBlockAction       = AnalyzeBlock;
-    private static readonly Func<StatementSyntax, EqualsValueClauseSyntax?> GetEqualsValueClauseFunc = GetEqualsValueClause;
+    private static readonly Action<SyntaxNodeAnalysisContext>  AnalyzeBlockAction         = AnalyzeBlock;
+    private static readonly Func<StatementSyntax, SyntaxNode?> GetVariableDeclaratorFunc  = GetVariableDeclarator;
+    private static readonly Func<StatementSyntax, SyntaxNode?> GetVariableInitializerFunc = GetVariableInitializer;
 
     private static void AnalyzeBlock(SyntaxNodeAnalysisContext context)
     {
         var block = (BlockSyntax)context.Node;
 
-        foreach (var unalignment in AlignmentAnalyzer.FindUnalignments(block.Statements, GetEqualsValueClauseFunc))
+        foreach (var unalignment in AlignmentAnalyzer.FindUnalignments(block.Statements, GetVariableDeclaratorFunc, GetVariableInitializerFunc))
             context.ReportDiagnostic(Diagnostic.Create(Rule, unalignment[0], unalignment.Skip(1)));
     }
 
-    private static EqualsValueClauseSyntax? GetEqualsValueClause(StatementSyntax statementSyntax)
+    private static SyntaxNode? GetVariableDeclarator(StatementSyntax statementSyntax)
+    {
+        if (statementSyntax.RawKind is (int)SyntaxKind.LocalDeclarationStatement &&
+            statementSyntax is LocalDeclarationStatementSyntax localDeclarationStatement &&
+            localDeclarationStatement.Declaration.Variables.Count is 1)
+            return localDeclarationStatement.Declaration.Variables[0];
+
+        return null;
+    }
+
+    private static SyntaxNode? GetVariableInitializer(StatementSyntax statementSyntax)
     {
         if (statementSyntax.RawKind is (int)SyntaxKind.LocalDeclarationStatement &&
             statementSyntax is LocalDeclarationStatementSyntax localDeclarationStatement &&

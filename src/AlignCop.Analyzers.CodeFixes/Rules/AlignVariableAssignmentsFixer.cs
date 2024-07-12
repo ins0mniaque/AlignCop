@@ -25,8 +25,8 @@ public sealed class AlignVariableAssignmentsFixer : CodeFixProvider
         var firstSpan  = diagnostic.Location.SourceSpan;
         var lastSpan   = diagnostic.AdditionalLocations.Count > 0 ? diagnostic.AdditionalLocations[diagnostic.AdditionalLocations.Count - 1].SourceSpan : firstSpan;
 
-        if (root.FindToken(firstSpan.Start).Parent?.Parent?.Parent?.Parent is not LocalDeclarationStatementSyntax firstVariableAssignment ||
-            root.FindToken(lastSpan.Start).Parent?.Parent?.Parent?.Parent is not LocalDeclarationStatementSyntax lastVariableAssignment)
+        if (root.FindToken(firstSpan.End).Parent is not LocalDeclarationStatementSyntax firstVariableAssignment ||
+            root.FindToken(lastSpan.End).Parent is not LocalDeclarationStatementSyntax lastVariableAssignment)
             return;
 
         if (firstVariableAssignment.Parent is not BlockSyntax block)
@@ -35,14 +35,25 @@ public sealed class AlignVariableAssignmentsFixer : CodeFixProvider
         context.RegisterCodeFix(
             CodeAction.Create(
                 title: CodeFixResources.AlignVariableAssignmentsCodeFixTitle,
-                createChangedDocument: cancellationToken => AlignmentFixer.FixUnalignment(context.Document, block.Statements, firstVariableAssignment, lastVariableAssignment, GetEqualsValueClauseFunc, cancellationToken),
+                createChangedDocument: cancellationToken => AlignmentFixer.FixUnalignment(context.Document, block.Statements, firstVariableAssignment, lastVariableAssignment, GetVariableDeclaratorFunc, GetVariableInitializerFunc, cancellationToken),
                 equivalenceKey: nameof(CodeFixResources.AlignVariableAssignmentsCodeFixTitle)),
             diagnostic);
     }
 
-    private static readonly Func<StatementSyntax, EqualsValueClauseSyntax?> GetEqualsValueClauseFunc = GetEqualsValueClause;
+    private static readonly Func<StatementSyntax, SyntaxNode?> GetVariableDeclaratorFunc  = GetVariableDeclarator;
+    private static readonly Func<StatementSyntax, SyntaxNode?> GetVariableInitializerFunc = GetVariableInitializer;
 
-    private static EqualsValueClauseSyntax? GetEqualsValueClause(StatementSyntax statementSyntax)
+    private static SyntaxNode? GetVariableDeclarator(StatementSyntax statementSyntax)
+    {
+        if (statementSyntax.RawKind is (int)SyntaxKind.LocalDeclarationStatement &&
+            statementSyntax is LocalDeclarationStatementSyntax localDeclarationStatement &&
+            localDeclarationStatement.Declaration.Variables.Count is 1)
+            return localDeclarationStatement.Declaration.Variables[0];
+
+        return null;
+    }
+
+    private static SyntaxNode? GetVariableInitializer(StatementSyntax statementSyntax)
     {
         if (statementSyntax.RawKind is (int)SyntaxKind.LocalDeclarationStatement &&
             statementSyntax is LocalDeclarationStatementSyntax localDeclarationStatement &&
