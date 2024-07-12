@@ -1,5 +1,4 @@
 ﻿using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 
 using AlignCop.Analyzers.Internal;
@@ -8,10 +7,10 @@ namespace AlignCop.Analyzers;
 
 internal static class AlignmentFixer
 {
-    public static async Task<Document> FixUnalignment<T>(Document document, IReadOnlyList<T> elements, T firstElement, T lastElement, Func<T, EqualsValueClauseSyntax?> getEqualsValueClause, CancellationToken cancellationToken) where T : SyntaxNode
+    public static async Task<Document> FixUnalignment<T>(Document document, IReadOnlyList<T> elements, T firstElement, T lastElement, Func<T, SyntaxNode?> getNodeToAlign, CancellationToken cancellationToken) where T : SyntaxNode
     {
         var startIndex = -1;
-        var endIndex   = -1;
+        var length     = -1;
 
         for (var index = 0; index < elements.Count; index++)
         {
@@ -27,45 +26,45 @@ internal static class AlignmentFixer
 
             if (member == lastElement)
             {
-                endIndex = index + 1;
+                length = index + 1 - startIndex;
                 break;
             }
         }
 
-        if (endIndex < 0)
+        if (length < 0)
             return document;
 
-        var equalColumns   = new int[endIndex - startIndex];
-        var maxEqualColumn = -1;
+        var columns   = new int[length];
+        var maxColumn = -1;
 
-        for (var index = startIndex; index < endIndex; index++)
+        for (var index = 0; index < length; index++)
         {
-            if (getEqualsValueClause(elements[index]) is not { } equal)
+            if (getNodeToAlign(elements[startIndex + index]) is not { } nodeToAlign)
             {
-                equalColumns[index] = -1;
+                columns[index] = -1;
                 continue;
             }
 
-            var equalColumn = equalColumns[index - startIndex] = equal.EqualsToken.GetLineSpan().StartLinePosition.Character;
-            if (equalColumn > maxEqualColumn)
-                maxEqualColumn = equalColumn;
+            var column = columns[index] = nodeToAlign.GetLineSpan().StartLinePosition.Character;
+            if (column > maxColumn)
+                maxColumn = column;
         }
 
-        if (maxEqualColumn < 0)
+        if (maxColumn < 0)
             return document;
 
         var text    = await document.GetTextAsync(cancellationToken).ConfigureAwait(false);
-        var changes = new List<TextChange>(endIndex - startIndex);
+        var changes = new List<TextChange>(length);
 
-        for (var index = startIndex; index < endIndex; index++)
+        for (var index = 0; index < length; index++)
         {
-            var member = elements[index];
-            if (getEqualsValueClause(member) is not { } equal)
+            var element = elements[startIndex + index];
+            if (getNodeToAlign(element) is not { } nodeToAlign)
                 continue;
 
-            var equalColumn = equalColumns[index - startIndex];
-            if (equalColumn < maxEqualColumn)
-                changes.Add(new TextChange(new TextSpan(equal.EqualsToken.Span.Start, 0), new string(' ', maxEqualColumn - equalColumn)));
+            var column = columns[index];
+            if (column < maxColumn)
+                changes.Add(new TextChange(new TextSpan(nodeToAlign.Span.Start, 0), new string(' ', maxColumn - column)));
         }
 
         if (changes.Count is 0)
