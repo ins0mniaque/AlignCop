@@ -41,7 +41,7 @@ public sealed class AlignVariableAssignmentsAnalyzer : DiagnosticAnalyzer
         var block = (BlockSyntax)context.Node;
 
         foreach (var unalignment in AlignmentAnalyzer.FindUnalignments(block.Statements, GetNodesToAlignSelector))
-            context.ReportDiagnostic(Diagnostic.Create(Rule, unalignment[0], unalignment.Skip(1)));
+            context.ReportDiagnostic(Diagnostic.Create(Rule, unalignment.Location, unalignment.AdditionalLocations));
     }
 
     private static void GetNodesToAlign(StatementSyntax statementSyntax, out SyntaxNode? nodeToAlignA, out SyntaxNode? nodeToAlignB)

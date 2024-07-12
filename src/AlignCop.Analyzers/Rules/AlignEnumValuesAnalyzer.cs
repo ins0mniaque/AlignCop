@@ -41,7 +41,7 @@ public sealed class AlignEnumValuesAnalyzer : DiagnosticAnalyzer
         var enumDeclaration = (EnumDeclarationSyntax)context.Node;
 
         foreach (var unalignment in AlignmentAnalyzer.FindUnalignments(enumDeclaration.Members, GetNodeToAlignSelector))
-            context.ReportDiagnostic(Diagnostic.Create(Rule, unalignment[0], unalignment.Skip(1), enumDeclaration.Identifier.Text));
+            context.ReportDiagnostic(Diagnostic.Create(Rule, unalignment.Location, unalignment.AdditionalLocations, enumDeclaration.Identifier.Text));
     }
 
     private static void GetNodeToAlign(EnumMemberDeclarationSyntax enumDeclaration, out SyntaxNode? nodeToAlign)

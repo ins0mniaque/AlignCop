@@ -7,7 +7,7 @@ namespace AlignCop.Analyzers;
 
 internal static class AlignmentAnalyzer
 {
-    public static IEnumerable<List<Location>> FindUnalignments<T>(IReadOnlyList<T> nodes, Selector<T, SyntaxNode?> getNodeToAlign) where T : SyntaxNode
+    public static IEnumerable<Unalignment> FindUnalignments<T>(IReadOnlyList<T> nodes, Selector<T, SyntaxNode?> getNodeToAlign) where T : SyntaxNode
     {
         if (nodes.Count < 2)
             yield break;
@@ -46,7 +46,7 @@ internal static class AlignmentAnalyzer
             yield return lastUnalignment;
     }
 
-    public static IEnumerable<List<Location>> FindUnalignments<T>(IReadOnlyList<T> nodes, Selector<T, SyntaxNode?, SyntaxNode?> getNodesToAlign) where T : SyntaxNode
+    public static IEnumerable<Unalignment> FindUnalignments<T>(IReadOnlyList<T> nodes, Selector<T, SyntaxNode?, SyntaxNode?> getNodesToAlign) where T : SyntaxNode
     {
         if (nodes.Count < 2)
             yield break;
@@ -85,7 +85,7 @@ internal static class AlignmentAnalyzer
             yield return lastUnalignment;
     }
 
-    private static List<Location>? FindUnalignment<T>(IReadOnlyList<T> nodes, Selector<T, SyntaxNode?> getNodeToAlign, int startIndex, int length) where T : SyntaxNode
+    private static Unalignment? FindUnalignment<T>(IReadOnlyList<T> nodes, Selector<T, SyntaxNode?> getNodeToAlign, int startIndex, int length) where T : SyntaxNode
     {
         var columns     = new int[length];
         var firstColumn = -1;
@@ -113,7 +113,7 @@ internal static class AlignmentAnalyzer
 
         if (!aligned)
         {
-            var locations = new List<Location>(length);
+            var unalignment = new Unalignment(length);
 
             for (var index = 0; index < length; index++)
             {
@@ -123,16 +123,16 @@ internal static class AlignmentAnalyzer
                 getNodeToAlign(nodes[startIndex + index], out var nodeToAlign);
 
                 if (nodeToAlign is not null)
-                    locations.Add(nodeToAlign.GetLocation());
+                    unalignment.Add(nodeToAlign.GetLocation());
             }
 
-            return locations;
+            return unalignment;
         }
 
         return null;
     }
 
-    private static List<Location>? FindUnalignment<T>(IReadOnlyList<T> nodes, Selector<T, SyntaxNode?, SyntaxNode?> getNodesToAlign, int startIndex, int length) where T : SyntaxNode
+    private static Unalignment? FindUnalignment<T>(IReadOnlyList<T> nodes, Selector<T, SyntaxNode?, SyntaxNode?> getNodesToAlign, int startIndex, int length) where T : SyntaxNode
     {
         var columnsA     = new int[length];
         var columnsB     = new int[length];
@@ -179,7 +179,7 @@ internal static class AlignmentAnalyzer
 
         if (!alignedA)
         {
-            var locations = new List<Location>(length);
+            var unalignment = new Unalignment(length);
 
             for (var index = 0; index < length; index++)
             {
@@ -188,27 +188,27 @@ internal static class AlignmentAnalyzer
                 if (columnsA[index] >= 0 && nodeToAlignA is not null)
                 {
                     if (columnsB[index] >= 0 && nodeToAlignB is not null)
-                        locations.Add(nodeToAlignA.GetLocation().CombineWith(nodeToAlignB.GetLocation()));
+                        unalignment.Add(nodeToAlignA.GetLocation().CombineWith(nodeToAlignB.GetLocation()));
                     else
-                        locations.Add(nodeToAlignA.GetLocation());
+                        unalignment.Add(nodeToAlignA.GetLocation());
                 }
             }
 
-            return locations;
+            return unalignment;
         }
         else if (!alignedB)
         {
-            var locations = new List<Location>(length);
+            var unalignment = new Unalignment(length);
 
             for (var index = 0; index < length; index++)
             {
                 getNodesToAlign(nodes[startIndex + index], out _, out var nodeToAlignB);
 
                 if (columnsB[index] >= 0 && nodeToAlignB is not null)
-                    locations.Add(nodeToAlignB.GetLocation());
+                    unalignment.Add(nodeToAlignB.GetLocation());
             }
 
-            return locations;
+            return unalignment;
         }
 
         return null;
