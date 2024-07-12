@@ -143,7 +143,6 @@ internal static class AlignmentFixer
         if (maxColumnA < 0)
             return document;
 
-        var text    = await document.GetTextAsync(cancellationToken).ConfigureAwait(false);
         var changes = new List<TextChange>(length);
 
         for (var index = 0; index < length; index++)
@@ -170,6 +169,8 @@ internal static class AlignmentFixer
 
         if (changes.Count is 0)
             return document;
+
+        var text = await document.GetTextAsync(cancellationToken).ConfigureAwait(false);
 
         return document.WithText(text.WithChanges(changes));
     }

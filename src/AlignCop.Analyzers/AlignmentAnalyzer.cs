@@ -100,7 +100,7 @@ internal static class AlignmentAnalyzer
 
             if (firstColumn < 0)
                 firstColumn = column;
-            else if(column != firstColumn)
+            else if (column != firstColumn)
                 aligned = false;
         }
 
@@ -114,7 +114,7 @@ internal static class AlignmentAnalyzer
 
                 getNodeToAlign(elements[startIndex + index], out var nodeToAlign);
 
-                if(nodeToAlign is not null)
+                if (nodeToAlign is not null)
                     locations.Add(nodeToAlign.GetLocation());
             }
 
@@ -151,7 +151,7 @@ internal static class AlignmentAnalyzer
 
             if (firstColumnA < 0)
                 firstColumnA = columnA;
-            else if(columnA != firstColumnA)
+            else if (columnA != firstColumnA)
                 alignedA = false;
 
             if (nodeToAlignB is null)
@@ -164,7 +164,7 @@ internal static class AlignmentAnalyzer
 
             if (firstColumnB < 0)
                 firstColumnB = columnB;
-            else if(columnB != firstColumnB)
+            else if (columnB != firstColumnB)
                 alignedB = false;
         }
 
@@ -190,7 +190,7 @@ internal static class AlignmentAnalyzer
 
             return locations;
         }
-        else if(!alignedB)
+        else if (!alignedB)
         {
             var locations = new List<Location>(length);
             for (var index = 0; index < length; index++)
