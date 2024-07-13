@@ -10,17 +10,19 @@ namespace AlignCop.Analyzers.Rules;
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class AlignVariableAssignmentsAnalyzer : DiagnosticAnalyzer
 {
-    private static readonly DiagnosticDescriptor Rule = new(
-        id: RuleIdentifiers.AlignVariableAssignments,
-        title: new LocalizableResourceString(nameof(Resources.AlignVariableAssignmentsTitle), Resources.ResourceManager, typeof(Resources)),
-        messageFormat: new LocalizableResourceString(nameof(Resources.AlignVariableAssignmentsMessageFormat), Resources.ResourceManager, typeof(Resources)),
-        category: RuleCategories.Readability,
-        defaultSeverity: DiagnosticSeverity.Info,
+    private static readonly DiagnosticDescriptor rule = new
+    (
+        id:                 RuleIdentifiers.AlignVariableAssignments,
+        title:              RuleResources.GetLocalizableString(nameof(Resources.AlignVariableAssignmentsTitle)),
+        messageFormat:      RuleResources.GetLocalizableString(nameof(Resources.AlignVariableAssignmentsMessageFormat)),
+        category:           RuleCategories.Readability,
+        defaultSeverity:    DiagnosticSeverity.Info,
         isEnabledByDefault: true,
-        description: new LocalizableResourceString(nameof(Resources.AlignVariableAssignmentsDescription), Resources.ResourceManager, typeof(Resources)),
-        helpLinkUri: RuleIdentifiers.GetHelpUri(RuleIdentifiers.AlignVariableAssignments));
+        description:        RuleResources.GetLocalizableString(nameof(Resources.AlignVariableAssignmentsDescription)),
+        helpLinkUri:        RuleIdentifiers.GetHelpUri(RuleIdentifiers.AlignVariableAssignments)
+    );
 
-    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
+    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = [rule];
 
     public override void Initialize(AnalysisContext context)
     {
@@ -33,24 +35,25 @@ public sealed class AlignVariableAssignmentsAnalyzer : DiagnosticAnalyzer
         context.RegisterSyntaxNodeAction(AnalyzeBlockAction, SyntaxKind.Block);
     }
 
-    private  static readonly Action<SyntaxNodeAnalysisContext>                   AnalyzeBlockAction      = AnalyzeBlock;
-    internal static readonly Selector<StatementSyntax, SyntaxNode?, SyntaxNode?> GetNodesToAlignSelector = GetNodesToAlign;
+    private static readonly Action<SyntaxNodeAnalysisContext> AnalyzeBlockAction = AnalyzeBlock;
 
     private static void AnalyzeBlock(SyntaxNodeAnalysisContext context)
     {
         var block = (BlockSyntax)context.Node;
 
         foreach (var unalignment in AlignmentAnalyzer.FindUnalignments(block.Statements, GetNodesToAlignSelector))
-            context.ReportDiagnostic(Diagnostic.Create(Rule, unalignment.Location, unalignment.AdditionalLocations));
+            context.ReportDiagnostic(Diagnostic.Create(rule, unalignment.Location, unalignment.AdditionalLocations));
     }
+
+    internal static readonly Selector<StatementSyntax, SyntaxNode?, SyntaxNode?> GetNodesToAlignSelector = GetNodesToAlign;
 
     private static void GetNodesToAlign(StatementSyntax statementSyntax, out SyntaxNode? nodeToAlignA, out SyntaxNode? nodeToAlignB)
     {
         if (statementSyntax.RawKind is (int)SyntaxKind.LocalDeclarationStatement &&
-            statementSyntax is LocalDeclarationStatementSyntax localDeclarationStatement &&
-            localDeclarationStatement.Declaration.Variables.Count is 1)
+            statementSyntax is LocalDeclarationStatementSyntax statement &&
+            statement.Declaration.Variables.Count is 1)
         {
-            var variable = localDeclarationStatement.Declaration.Variables[0];
+            var variable = statement.Declaration.Variables[0];
 
             nodeToAlignA = variable;
             nodeToAlignB = variable.Initializer;

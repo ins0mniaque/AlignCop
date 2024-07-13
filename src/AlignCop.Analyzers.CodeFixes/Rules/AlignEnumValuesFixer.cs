@@ -11,7 +11,7 @@ namespace AlignCop.Analyzers.Rules;
 [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(AlignEnumValuesFixer)), Shared]
 public sealed class AlignEnumValuesFixer : CodeFixProvider
 {
-    public sealed override ImmutableArray<string> FixableDiagnosticIds => ImmutableArray.Create(RuleIdentifiers.AlignEnumValues);
+    public sealed override ImmutableArray<string> FixableDiagnosticIds { get; } = [RuleIdentifiers.AlignEnumValues];
 
     public sealed override FixAllProvider GetFixAllProvider() => WellKnownFixAllProviders.BatchFixer;
 
@@ -22,20 +22,28 @@ public sealed class AlignEnumValuesFixer : CodeFixProvider
 
         var diagnostic = context.Diagnostics[0];
         var firstSpan  = diagnostic.Location.SourceSpan;
-        var lastSpan   = diagnostic.AdditionalLocations.Count > 0 ? diagnostic.AdditionalLocations[diagnostic.AdditionalLocations.Count - 1].SourceSpan : firstSpan;
+        var lastSpan   = diagnostic.GetLastLocation ( ).SourceSpan;
 
         if (root.FindToken(firstSpan.Start).Parent?.Parent is not EnumMemberDeclarationSyntax firstEnumMember ||
-            root.FindToken(lastSpan.Start).Parent?.Parent is not EnumMemberDeclarationSyntax lastEnumMember)
+            root.FindToken(lastSpan .Start).Parent?.Parent is not EnumMemberDeclarationSyntax lastEnumMember  ||
+            firstEnumMember.Parent                         is not EnumDeclarationSyntax       enumDeclaration)
             return;
 
-        if (firstEnumMember.Parent is not EnumDeclarationSyntax enumDeclaration)
-            return;
+        var action = CodeAction.Create
+        (
+            title:                 CodeFixResources.AlignEnumValuesCodeFixTitle,
+            createChangedDocument: FixAlignment,
+            equivalenceKey:        nameof(CodeFixResources.AlignEnumValuesCodeFixTitle)
+        );
 
-        context.RegisterCodeFix(
-            CodeAction.Create(
-                title: CodeFixResources.AlignEnumValuesCodeFixTitle,
-                createChangedDocument: cancellationToken => AlignmentFixer.FixAlignment(context.Document, enumDeclaration.Members, firstEnumMember, lastEnumMember, AlignEnumValuesAnalyzer.GetNodeToAlignSelector, cancellationToken),
-                equivalenceKey: nameof(CodeFixResources.AlignEnumValuesCodeFixTitle)),
-            diagnostic);
+        context.RegisterCodeFix(action, diagnostic);
+
+        Task<Document> FixAlignment(CancellationToken cancellationToken)
+        {
+            return AlignmentFixer.FixAlignment(context.Document,
+                                               enumDeclaration.Members, firstEnumMember, lastEnumMember,
+                                               AlignEnumValuesAnalyzer.GetNodeToAlignSelector,
+                                               cancellationToken);
+        }
     }
 }

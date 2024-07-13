@@ -11,7 +11,7 @@ namespace AlignCop.Analyzers.Rules;
 [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(AlignVariableAssignmentsFixer)), Shared]
 public sealed class AlignVariableAssignmentsFixer : CodeFixProvider
 {
-    public sealed override ImmutableArray<string> FixableDiagnosticIds => ImmutableArray.Create(RuleIdentifiers.AlignVariableAssignments);
+    public sealed override ImmutableArray<string> FixableDiagnosticIds { get; } = [RuleIdentifiers.AlignVariableAssignments];
 
     public sealed override FixAllProvider GetFixAllProvider() => WellKnownFixAllProviders.BatchFixer;
 
@@ -22,20 +22,28 @@ public sealed class AlignVariableAssignmentsFixer : CodeFixProvider
 
         var diagnostic = context.Diagnostics[0];
         var firstSpan  = diagnostic.Location.SourceSpan;
-        var lastSpan   = diagnostic.AdditionalLocations.Count > 0 ? diagnostic.AdditionalLocations[diagnostic.AdditionalLocations.Count - 1].SourceSpan : firstSpan;
+        var lastSpan   = diagnostic.GetLastLocation ( ).SourceSpan;
 
-        if (root.FindToken(firstSpan.End).Parent is not LocalDeclarationStatementSyntax firstVariableAssignment ||
-            root.FindToken(lastSpan.End).Parent is not LocalDeclarationStatementSyntax lastVariableAssignment)
+        if (root.FindToken(firstSpan.End).Parent is not LocalDeclarationStatementSyntax firstStatement ||
+            root.FindToken(lastSpan .End).Parent is not LocalDeclarationStatementSyntax lastStatement  ||
+            firstStatement.Parent                is not BlockSyntax                     block)
             return;
 
-        if (firstVariableAssignment.Parent is not BlockSyntax block)
-            return;
+        var action = CodeAction.Create
+        (
+            title:                 CodeFixResources.AlignVariableAssignmentsCodeFixTitle,
+            createChangedDocument: FixAlignment,
+            equivalenceKey:        nameof(CodeFixResources.AlignVariableAssignmentsCodeFixTitle)
+        );
 
-        context.RegisterCodeFix(
-            CodeAction.Create(
-                title: CodeFixResources.AlignVariableAssignmentsCodeFixTitle,
-                createChangedDocument: cancellationToken => AlignmentFixer.FixAlignment(context.Document, block.Statements, firstVariableAssignment, lastVariableAssignment, AlignVariableAssignmentsAnalyzer.GetNodesToAlignSelector, cancellationToken),
-                equivalenceKey: nameof(CodeFixResources.AlignVariableAssignmentsCodeFixTitle)),
-            diagnostic);
+        context.RegisterCodeFix(action, diagnostic);
+
+        Task<Document> FixAlignment(CancellationToken cancellationToken)
+        {
+            return AlignmentFixer.FixAlignment(context.Document,
+                                               block.Statements, firstStatement, lastStatement,
+                                               AlignVariableAssignmentsAnalyzer.GetNodesToAlignSelector,
+                                               cancellationToken);
+        }
     }
 }

@@ -10,17 +10,19 @@ namespace AlignCop.Analyzers.Rules;
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
 public sealed class AlignEnumValuesAnalyzer : DiagnosticAnalyzer
 {
-    private static readonly DiagnosticDescriptor Rule = new(
-        id: RuleIdentifiers.AlignEnumValues,
-        title: new LocalizableResourceString(nameof(Resources.AlignEnumValuesTitle), Resources.ResourceManager, typeof(Resources)),
-        messageFormat: new LocalizableResourceString(nameof(Resources.AlignEnumValuesMessageFormat), Resources.ResourceManager, typeof(Resources)),
-        category: RuleCategories.Readability,
-        defaultSeverity: DiagnosticSeverity.Info,
+    private static readonly DiagnosticDescriptor rule = new
+    (
+        id:                 RuleIdentifiers.AlignEnumValues,
+        title:              RuleResources.GetLocalizableString(nameof(Resources.AlignEnumValuesTitle)),
+        messageFormat:      RuleResources.GetLocalizableString(nameof(Resources.AlignEnumValuesMessageFormat)),
+        category:           RuleCategories.Readability,
+        defaultSeverity:    DiagnosticSeverity.Info,
         isEnabledByDefault: true,
-        description: new LocalizableResourceString(nameof(Resources.AlignEnumValuesDescription), Resources.ResourceManager, typeof(Resources)),
-        helpLinkUri: RuleIdentifiers.GetHelpUri(RuleIdentifiers.AlignEnumValues));
+        description:        RuleResources.GetLocalizableString(nameof(Resources.AlignEnumValuesDescription)),
+        helpLinkUri:        RuleIdentifiers.GetHelpUri(RuleIdentifiers.AlignEnumValues)
+    );
 
-    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
+    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = [rule];
 
     public override void Initialize(AnalysisContext context)
     {
@@ -33,16 +35,17 @@ public sealed class AlignEnumValuesAnalyzer : DiagnosticAnalyzer
         context.RegisterSyntaxNodeAction(AnalyzeEnumDeclarationAction, SyntaxKind.EnumDeclaration);
     }
 
-    private  static readonly Action<SyntaxNodeAnalysisContext>                  AnalyzeEnumDeclarationAction = AnalyzeEnumDeclaration;
-    internal static readonly Selector<EnumMemberDeclarationSyntax, SyntaxNode?> GetNodeToAlignSelector       = GetNodeToAlign;
+    private static readonly Action<SyntaxNodeAnalysisContext> AnalyzeEnumDeclarationAction = AnalyzeEnumDeclaration;
 
     private static void AnalyzeEnumDeclaration(SyntaxNodeAnalysisContext context)
     {
         var enumDeclaration = (EnumDeclarationSyntax)context.Node;
 
         foreach (var unalignment in AlignmentAnalyzer.FindUnalignments(enumDeclaration.Members, GetNodeToAlignSelector))
-            context.ReportDiagnostic(Diagnostic.Create(Rule, unalignment.Location, unalignment.AdditionalLocations, enumDeclaration.Identifier.Text));
+            context.ReportDiagnostic(Diagnostic.Create(rule, unalignment.Location, unalignment.AdditionalLocations, enumDeclaration.Identifier.Text));
     }
+
+    internal static readonly Selector<EnumMemberDeclarationSyntax, SyntaxNode?> GetNodeToAlignSelector = GetNodeToAlign;
 
     private static void GetNodeToAlign(EnumMemberDeclarationSyntax enumDeclaration, out SyntaxNode? nodeToAlign)
     {
