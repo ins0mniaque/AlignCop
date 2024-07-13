@@ -9,10 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="coverlet.collector">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-    </PackageReference>
+    <PackageReference Include="coverlet.collector" PrivateAssets="all" IncludeAssets="runtime; build; native; contentfiles; analyzers" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="MSTest.TestAdapter" />
     <PackageReference Include="MSTest.TestFramework" />
@@ -31,8 +28,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\AlignCop.Analyzers.CodeFixes\AlignCop.Analyzers.CodeFixes.csproj" />
     <ProjectReference Include="..\..\src\AlignCop.Analyzers\AlignCop.Analyzers.csproj" />
+    <ProjectReference Include="..\..\src\AlignCop.Analyzers.CodeFixes\AlignCop.Analyzers.CodeFixes.csproj" />
   </ItemGroup>
 
 </Project>
