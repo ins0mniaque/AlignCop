@@ -5,5 +5,5 @@
 
 Rule ID | Category | Severity | Notes
 --------|----------|----------|----------------------------------
-AA1000  | Readability | Info     | AlignVariableAssignmentsAnalyzer
-AA1002  | Readability | Info     | AlignEnumValuesAnalyzer
+AA1000  | Style    | Info     | AlignVariableAssignmentsAnalyzer
+AA1002  | Style    | Info     | AlignEnumValuesAnalyzer

@@ -15,7 +15,7 @@ public sealed class AlignVariableAssignmentsAnalyzer : DiagnosticAnalyzer
         id:                 RuleIdentifiers.AlignVariableAssignments,
         title:              RuleResources.GetLocalizableString(nameof(Resources.AlignVariableAssignmentsTitle)),
         messageFormat:      RuleResources.GetLocalizableString(nameof(Resources.AlignVariableAssignmentsMessageFormat)),
-        category:           RuleCategories.Readability,
+        category:           RuleCategories.Style,
         defaultSeverity:    DiagnosticSeverity.Info,
         isEnabledByDefault: true,
         description:        RuleResources.GetLocalizableString(nameof(Resources.AlignVariableAssignmentsDescription)),

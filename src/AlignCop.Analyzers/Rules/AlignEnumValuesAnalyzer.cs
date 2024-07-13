@@ -15,7 +15,7 @@ public sealed class AlignEnumValuesAnalyzer : DiagnosticAnalyzer
         id:                 RuleIdentifiers.AlignEnumValues,
         title:              RuleResources.GetLocalizableString(nameof(Resources.AlignEnumValuesTitle)),
         messageFormat:      RuleResources.GetLocalizableString(nameof(Resources.AlignEnumValuesMessageFormat)),
-        category:           RuleCategories.Readability,
+        category:           RuleCategories.Style,
         defaultSeverity:    DiagnosticSeverity.Info,
         isEnabledByDefault: true,
         description:        RuleResources.GetLocalizableString(nameof(Resources.AlignEnumValuesDescription)),
