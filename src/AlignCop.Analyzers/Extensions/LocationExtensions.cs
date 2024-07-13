@@ -5,7 +5,7 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace AlignCop.Analyzers;
 
-internal static class Locator
+internal static class LocationExtensions
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Location CombineWith(this Location location, Location otherLocation)
