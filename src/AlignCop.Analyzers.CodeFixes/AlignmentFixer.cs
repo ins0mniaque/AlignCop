@@ -180,13 +180,4 @@ internal static class AlignmentFixer
             }
         }
     }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Location GetLastLocation(this Diagnostic diagnostic)
-    {
-        if (diagnostic.AdditionalLocations.Count is 0)
-            return diagnostic.Location;
-
-        return diagnostic.AdditionalLocations[diagnostic.AdditionalLocations.Count - 1];
-    }
 }
