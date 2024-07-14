@@ -10,6 +10,8 @@
     <AnalysisLevel>latest</AnalysisLevel>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+    <Features>strict</Features>
+    <WarningLevel>9999</WarningLevel>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <NoWarn>$(NoWarn);CA1510</NoWarn>
     <AccelerateBuildsInVisualStudio>true</AccelerateBuildsInVisualStudio>
