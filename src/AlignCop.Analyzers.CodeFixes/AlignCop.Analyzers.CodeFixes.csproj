@@ -5,6 +5,9 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <IsPackable>false</IsPackable>
     <RootNamespace>AlignCop.Analyzers</RootNamespace>
+
+    <DebugSymbols>True</DebugSymbols>
+    <DebugType>Embedded</DebugType>
   </PropertyGroup>
 
   <ItemGroup>
